@@ -33,7 +33,6 @@ describe("Dexie", async function () {
     const Dexie = await ethers.getContractFactory("Dexie");
     dexie = await Dexie.deploy();
 
-    console.log("Hey");
     accounts = await ethers.getSigners();
     owner = accounts[0];
     investor1 = accounts[1];
@@ -54,17 +53,17 @@ describe("Dexie", async function () {
     outputTolerance = (expectedOutputAmount * relTol) / 1000n;
 
     // Give some tokens to the investor to swap
-    console.log(
-      `${await outputToken.symbol()} balance before ${await outputToken.balanceOf(
-        investor1
-      )}`
-    );
-    console.log(
-      `${await inputToken.symbol()} balance before ${await inputToken.balanceOf(
-        investor1
-      )}`
-    );
-    console.log(`Block Number: ${await ethers.provider.getBlockNumber()}`);
+    // console.log(
+    //   `${await outputToken.symbol()} balance before ${await outputToken.balanceOf(
+    //     investor1
+    //   )}`
+    // );
+    // console.log(
+    //   `${await inputToken.symbol()} balance before ${await inputToken.balanceOf(
+    //     investor1
+    //   )}`
+    // );
+    // console.log(`Block Number: ${await ethers.provider.getBlockNumber()}`);
 
     initialInputTokenBalance = tokens(100, inputDecimals);
     initialOutputTokenBalance = tokens(1000000, outputDecimals);
@@ -79,19 +78,17 @@ describe("Dexie", async function () {
       initialOutputTokenBalance
     );
 
-    mineAndWaitBlocks(1000);
-
-    console.log(
-      `${await outputToken.symbol()} balance after ${await outputToken.balanceOf(
-        investor1
-      )}`
-    );
-    console.log(
-      `${await inputToken.symbol()} balance after ${await inputToken.balanceOf(
-        investor1
-      )}`
-    );
-    console.log(`Block Number: ${await ethers.provider.getBlockNumber()}`);
+    // console.log(
+    //   `${await outputToken.symbol()} balance after ${await outputToken.balanceOf(
+    //     investor1
+    //   )}`
+    // );
+    // console.log(
+    //   `${await inputToken.symbol()} balance after ${await inputToken.balanceOf(
+    //     investor1
+    //   )}`
+    // );
+    // console.log(`Block Number: ${await ethers.provider.getBlockNumber()}`);
   });
   describe("Calculating prices", async () => {
     describe("Success", () => {

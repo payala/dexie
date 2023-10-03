@@ -16,7 +16,7 @@ const setStorageAt = async (address, index, value) => {
     index,
     value,
   ]);
-  await hre.network.provider.send("hardhat_mine", ["0x100"]);
+  await hre.network.provider.send("hardhat_mine", ["0x1"]);
 };
 
 module.exports = {
