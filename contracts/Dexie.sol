@@ -3,8 +3,11 @@ pragma solidity ^0.8.9;
 
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+using SafeERC20 for IERC20;
 
 import "hardhat/console.sol";
+
 
 contract Dexie {
 
@@ -22,17 +25,11 @@ contract Dexie {
         require(_dexAddress != address(0), "Invalid DEX address");
         require(_amountIn > 0, "Invalid input amount");
 
-        require(
-            IERC20(_path[0]).transferFrom(msg.sender, address(this), _amountIn),
-            "Transfer from failed"
-        );
-
+        IERC20(_path[0]).safeTransferFrom(msg.sender, address(this), _amountIn);
+        
         uint[] memory amounts = _swapOnIUniV2(_dexAddress, _path, _amountIn, _minAmountOut);
 
-        IERC20(_path[1]).transfer(msg.sender, amounts[1]);
-        // require(
-        //     "Transfer to failed"
-        // );
+        IERC20(_path[1]).safeTransfer(msg.sender, amounts[1]);        
 
         return amounts[1];
     }

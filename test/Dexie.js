@@ -44,7 +44,7 @@ describe("Dexie", async function () {
     usdc = await ethers.getContractAt(erc20Abi, usdc_address, signer);
     //console.log(await ethers.provider.getBlockNumber());
     inputToken = weth;
-    outputToken = usdc;
+    outputToken = usdt;
     inputDecimals = await inputToken.decimals();
     outputDecimals = await outputToken.decimals();
     inputAmount = tokens(10, inputDecimals);
