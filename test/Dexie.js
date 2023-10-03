@@ -149,5 +149,35 @@ describe("Dexie", async function () {
         });
       });
     });
+
+    describe("Swapping on shushiswap", () => {
+      describe("Success", () => {
+        beforeEach(async () => {
+          tx = await dexie
+            .connect(investor1)
+            .swapOnUniV2(
+              sushiswapV2Router,
+              [inputToken, outputToken],
+              inputAmount,
+              0
+            );
+          result = await tx.wait();
+        });
+
+        it("takes the input tokens from the account", async () => {
+          expect(await inputToken.balanceOf(investor1)).to.approximately(
+            initialInputTokenBalance - inputAmount,
+            inputTolerance
+          );
+        });
+
+        it("deposits the output tokens to the account", async () => {
+          expect(await outputToken.balanceOf(investor1)).to.approximately(
+            initialOutputTokenBalance + expectedOutputAmount,
+            outputTolerance
+          );
+        });
+      });
+    });
   });
 });
