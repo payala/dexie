@@ -2,12 +2,12 @@ import { ethers } from "ethers";
 
 /**** Type Conversion functions ****/
 
-const toEth = (wei) => {
-  return ethers.utils.formatUnits(wei, "ether");
+const toEth = (wei, decimals = 18) => {
+  return ethers.formatUnits(wei, decimals);
 };
 
-const tokens = (n) => {
-  return ethers.utils.parseUnits(n.toString(), "ether");
+const tokens = (n, decimals = 18) => {
+  return ethers.parseUnits(n.toString(), decimals);
 };
 
 const ether = tokens;
