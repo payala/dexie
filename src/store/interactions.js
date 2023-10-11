@@ -2,9 +2,14 @@ import { ethers } from "ethers";
 import { setAccount, setProvider, setChainId } from "./reducers/provider";
 import { setBalances } from "./reducers/tokens";
 import { toEth, tokens } from "../utils_fe";
+import { useSelector } from "react-redux";
 
 import config from "../config.json";
-import { setPairs, setSymbols } from "./reducers/markets";
+import { setPairs, setSymbols, setDexContracts } from "./reducers/markets";
+
+import IUniswapV2FactoryABI from "@uniswap/v2-core/build/IUniswapV2Factory.json";
+import IUniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
+import IUniswapV2PairABI from "@uniswap/v2-core/build/IUniswapV2Pair.json";
 
 export const loadAccount = async (dispatch) => {
   // Fetch accounts
@@ -28,6 +33,46 @@ export const loadNetwork = async (provider, dispatch) => {
   dispatch(setChainId(chainId.toString()));
 
   return chainId;
+};
+
+// --------------------------------------------------------------------------------------
+// LOAD EXCHANGES
+
+export const loadDexes = async (provider, chainId, dispatch) => {
+  console.log(chainId);
+  const uniswapFactory = new ethers.Contract(
+    config[chainId].DEXES.uniswap.FACTORY_ADDRESS,
+    IUniswapV2FactoryABI.abi,
+    provider
+  );
+  const uniswapRouter = new ethers.Contract(
+    config[chainId].DEXES.uniswap.V2_ROUTER_02_ADDRESS,
+    IUniswapV2RouterABI.abi,
+    provider
+  );
+  const sushiswapFactory = new ethers.Contract(
+    config[chainId].DEXES.sushiswap.FACTORY_ADDRESS,
+    IUniswapV2FactoryABI.abi,
+    provider
+  );
+  const sushiswapRouter = new ethers.Contract(
+    config[chainId].DEXES.sushiswap.V2_ROUTER_02_ADDRESS,
+    IUniswapV2RouterABI.abi,
+    provider
+  );
+
+  const dexContracts = {
+    uniswap: {
+      router: uniswapRouter,
+      factory: uniswapFactory,
+    },
+    sushiswap: {
+      router: sushiswapRouter,
+      factory: sushiswapFactory,
+    },
+  };
+
+  dispatch(setDexContracts(dexContracts));
 };
 
 // --------------------------------------------------------------------------------------

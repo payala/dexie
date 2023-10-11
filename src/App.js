@@ -1,5 +1,5 @@
 import React from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import logo from "./logo.svg";
 import "./App.css";
@@ -7,6 +7,7 @@ import SwapDetails from "./Components/swapDetails";
 import SwapInput from "./Components/SwapInput";
 import {
   loadAccount,
+  loadDexes,
   loadMarkets,
   loadNetwork,
   loadProvider,
@@ -14,6 +15,7 @@ import {
 } from "./store/interactions";
 
 function App() {
+  const dexContracts = useSelector((state) => state.markets.dexContracts);
   const dispatch = useDispatch();
 
   const loadBlockchainData = async () => {
@@ -32,6 +34,7 @@ function App() {
     });
 
     // Initiate contracts
+    await loadDexes(provider, chainId, dispatch);
     await loadMarkets(provider, dispatch);
     // todo: await loadDexie
   };
