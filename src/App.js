@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import logo from "./logo.svg";
 import "./App.css";
-import SwapDetails from "./Components/swapDetails";
+import SwapDetails from "./Components/SwapDetails";
 import SwapInput from "./Components/SwapInput";
 import {
   loadAccount,
@@ -13,9 +13,11 @@ import {
   loadProvider,
   loadTokens,
 } from "./store/interactions";
+import Navbar from "./Components/Navbar";
 
 function App() {
   const dexContracts = useSelector((state) => state.markets.dexContracts);
+  const account = useSelector((state) => state.provider.account);
   const dispatch = useDispatch();
 
   const loadBlockchainData = async () => {
@@ -45,62 +47,67 @@ function App() {
 
   return (
     <>
-      <div className="bg-gray-800 p-6 rounded-lg w-80">
-        <h1
-          className="text-6xl font-bold mb-4 text-center"
-          style={{ fontFamily: "'Caveat', cursive" }}
-        >
-          Dexie
-        </h1>
-        <SwapInput isInput={true} placeholder="Input Amount" />
-        {/* <!-- Swap Arrow --> */}
-        <div className="text-center my-2 cursor-pointer">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="w-6 h-6 mx-auto mb-6 mt-0"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
-            />
-          </svg>
-        </div>
+      <div className="flex-row bg-gray-900">
+        <Navbar />
+        <div className="text-white flex items-center justify-center min-h-screen">
+          <div className="bg-gray-800 p-6 rounded-lg w-80">
+            <h1
+              className="text-6xl font-bold mb-4 text-center"
+              style={{ fontFamily: "'Caveat', cursive" }}
+            >
+              Dexie
+            </h1>
+            <SwapInput isInput={true} placeholder="Input Amount" />
+            {/* <!-- Swap Arrow --> */}
+            <div className="text-center my-2 cursor-pointer">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="w-6 h-6 mx-auto mb-6 mt-0"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
+                />
+              </svg>
+            </div>
 
-        {/* <!-- Output Field --> */}
-        <SwapInput isInput={false} placeholder="Output Amount" />
+            {/* <!-- Output Field --> */}
+            <SwapInput isInput={false} placeholder="Output Amount" />
 
-        {/* <!-- Slippage Info --> */}
-        <div className="bg-gray-700 p-4 rounded-lg mb-2">
-          <div className="mb-2">Max Slippage</div>
-          <div className="flex justify-between">
-            <button className="px-4 py-1 rounded-full bg-gray-600 text-white">
-              0.5%
-            </button>
-            <button className="px-4 py-1 rounded-full bg-gray-600 text-white">
-              1%
-            </button>
-            <button className="px-4 py-1 rounded-full bg-gray-600 text-white">
-              2%
+            {/* <!-- Slippage Info --> */}
+            <div className="bg-gray-700 p-4 rounded-lg mb-2">
+              <div className="mb-2">Max Slippage</div>
+              <div className="flex justify-between">
+                <button className="px-4 py-1 rounded-full bg-gray-600 text-white">
+                  0.5%
+                </button>
+                <button className="px-4 py-1 rounded-full bg-gray-600 text-white">
+                  1%
+                </button>
+                <button className="px-4 py-1 rounded-full bg-gray-600 text-white">
+                  2%
+                </button>
+              </div>
+            </div>
+
+            {/* <!-- Rate Info --> */}
+            <div className="bg-gray-700 p-4 rounded-lg mb-4">
+              Rate: 1 ETH = 2000 DAI (Best rate at Uniswap)
+            </div>
+
+            {/* <!-- Swap Button --> */}
+            <button className="w-full bg-blue-500 hover:bg-blue-600 rounded-lg p-2 text-white">
+              Swap
             </button>
           </div>
+          <SwapDetails />
         </div>
-
-        {/* <!-- Rate Info --> */}
-        <div className="bg-gray-700 p-4 rounded-lg mb-4">
-          Rate: 1 ETH = 2000 DAI (Best rate at Uniswap)
-        </div>
-
-        {/* <!-- Swap Button --> */}
-        <button className="w-full bg-blue-500 hover:bg-blue-600 rounded-lg p-2 text-white">
-          Swap
-        </button>
       </div>
-      <SwapDetails />
     </>
   );
 }

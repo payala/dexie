@@ -13,9 +13,11 @@ import IUniswapV2PairABI from "@uniswap/v2-core/build/IUniswapV2Pair.json";
 
 export const loadAccount = async (dispatch) => {
   // Fetch accounts
+  console.log("Requesting metamask");
   const accounts = await window.ethereum.request({
     method: "eth_requestAccounts",
   });
+  console.log("Given");
   const account = ethers.getAddress(accounts[0]);
   dispatch(setAccount(account));
 
