@@ -33,7 +33,7 @@ function SwapInput({ isInput, placeholder }) {
       const chosenPair = pairs.filter(
         (pair) =>
           (pair.quote === inputSymbol && pair.base === outputSymbol) ||
-          (pair.base === outputSymbol && pair.quote === inputSymbol)
+          (pair.base === inputSymbol && pair.quote === outputSymbol)
       );
       if (chosenPair[0] === undefined) {
         console.warn(
