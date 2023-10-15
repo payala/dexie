@@ -5,7 +5,14 @@ import { toEth, tokens } from "../utils_fe";
 import { useSelector } from "react-redux";
 
 import config from "../config.json";
-import { setPairs, setSymbols, setDexContracts } from "./reducers/markets";
+import {
+  setPairs,
+  setSymbols,
+  setDexContracts,
+  setSelectedSymbol,
+  setMatchingSymbols,
+  setSelectedPair,
+} from "./reducers/markets";
 
 import IUniswapV2FactoryABI from "@uniswap/v2-core/build/IUniswapV2Factory.json";
 import IUniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
@@ -117,6 +124,17 @@ export const loadMarkets = async (provider, dispatch) => {
     });
 };
 
+export const selectFirstToken = (symbol, dispatch) => {
+  dispatch(setSelectedSymbol(symbol));
+};
+
+export const selectMatchingSymbols = (symbols, dispatch) => {
+  dispatch(setMatchingSymbols(symbols));
+};
+
+export const setPair = (pair, dispatch) => {
+  dispatch(setSelectedPair(pair));
+};
 // --------------------------------------------------------------------------------------
 // LOAD CONTRACTS
 
