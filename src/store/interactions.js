@@ -1,6 +1,10 @@
 import { ethers } from "ethers";
-import { setAccount, setProvider, setChainId } from "./reducers/provider";
-import { setBalances } from "./reducers/tokens";
+import provider, {
+  setAccount,
+  setProvider,
+  setChainId,
+} from "./reducers/provider";
+import { setBalances, setTokenContracts } from "./reducers/tokens";
 import { toEth, tokens } from "../utils_fe";
 import { useSelector } from "react-redux";
 
@@ -17,6 +21,7 @@ import {
 import IUniswapV2FactoryABI from "@uniswap/v2-core/build/IUniswapV2Factory.json";
 import IUniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
 import IUniswapV2PairABI from "@uniswap/v2-core/build/IUniswapV2Pair.json";
+import IERC20 from "@openzeppelin/contracts/build/contracts/ERC20.json";
 
 export const loadAccount = async (dispatch) => {
   // Fetch accounts
@@ -32,8 +37,13 @@ export const loadAccount = async (dispatch) => {
 };
 
 export const loadProvider = (dispatch) => {
-  const provider = new ethers.BrowserProvider(window.ethereum);
+  const provider = getProvider();
   dispatch(setProvider(provider));
+  return provider;
+};
+
+export const getProvider = () => {
+  const provider = new ethers.BrowserProvider(window.ethereum);
   return provider;
 };
 
@@ -132,7 +142,26 @@ export const selectMatchingSymbols = (symbols, dispatch) => {
   dispatch(setMatchingSymbols(symbols));
 };
 
-export const setPair = (pair, dispatch) => {
+export const setPair = async (pair, dispatch) => {
+  // Build token contract dict
+  const provider = getProvider();
+  const signer = await provider.getSigner();
+  const pairContract = new ethers.Contract(
+    pair.pairAddress,
+    IUniswapV2PairABI.abi,
+    signer
+  );
+  const token0Address = await pairContract.token0();
+  const token1Address = await pairContract.token1();
+
+  const token0Contract = new ethers.Contract(token0Address, IERC20.abi, signer);
+  const token1Contract = new ethers.Contract(token1Address, IERC20.abi, signer);
+
+  const tokens = {
+    [pair.base]: token0Contract,
+    [pair.quote]: token1Contract,
+  };
+  dispatch(setTokenContracts(tokens));
   dispatch(setSelectedPair(pair));
 };
 // --------------------------------------------------------------------------------------

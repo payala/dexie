@@ -7,7 +7,7 @@ export const tokens = createSlice({
     balances: [0, 0],
   },
   reducers: {
-    setContracts: (state, action) => {
+    setTokenContracts: (state, action) => {
       state.contracts = action.payload;
     },
     setBalances: (state, action) => {
@@ -16,6 +16,6 @@ export const tokens = createSlice({
   },
 });
 
-export const { setContracts, setBalances } = tokens.actions;
+export const { setTokenContracts, setBalances } = tokens.actions;
 
 export default tokens.reducer;

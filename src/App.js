@@ -10,7 +10,7 @@ import {
   loadDexes,
   loadMarkets,
   loadNetwork,
-  loadProvider,
+  getProvider,
   loadTokens,
 } from "./store/interactions";
 import Navbar from "./Components/Navbar";
@@ -21,7 +21,7 @@ function App() {
   const dispatch = useDispatch();
 
   const loadBlockchainData = async () => {
-    const provider = await loadProvider(dispatch);
+    const provider = await getProvider();
     const chainId = await loadNetwork(provider, dispatch);
     console.log(chainId);
 

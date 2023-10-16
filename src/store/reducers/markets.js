@@ -10,6 +10,7 @@ export const tokens = createSlice({
     selectedSymbol: null,
     matchingSymbols: [],
     selectedPair: null,
+    selectedPairContract: null,
   },
   reducers: {
     setPairs: (state, action) => {
@@ -30,6 +31,9 @@ export const tokens = createSlice({
     setSelectedPair: (state, action) => {
       state.selectedPair = action.payload;
     },
+    setSelectedPairContract: (state, action) => {
+      state.selectedPairContract = action.payload;
+    },
   },
 });
 
@@ -40,6 +44,7 @@ export const {
   setSelectedSymbol,
   setMatchingSymbols,
   setSelectedPair,
+  setSelectedPairContract,
 } = tokens.actions;
 
 export default tokens.reducer;
