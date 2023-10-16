@@ -5,6 +5,7 @@ import logo from "./logo.svg";
 import "./App.css";
 import SwapDetails from "./Components/SwapDetails";
 import SwapInput from "./Components/SwapInput";
+import MessageBanner from "./Components/MessageBanner";
 import {
   loadAccount,
   loadDexes,
@@ -16,6 +17,11 @@ import {
 import Navbar from "./Components/Navbar";
 
 function App() {
+  const [banner, setBanner] = React.useState({
+    visible: false,
+    message: "",
+    type: "",
+  });
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const account = useSelector((state) => state.provider.account);
   const dispatch = useDispatch();
@@ -45,10 +51,35 @@ function App() {
     loadBlockchainData();
   }, []);
 
+  const showError = (msg) => {
+    setBanner({ visible: true, message: msg, type: "error" });
+  };
+
+  const showSuccess = (msg) => {
+    setBanner({
+      visible: true,
+      message: msg,
+      type: "success",
+    });
+  };
+
+  const closeBanner = () => {
+    setBanner({ visible: false, message: "", type: "" });
+  };
+
   return (
     <>
       <div className="flex-row bg-gray-900">
         <Navbar />
+        <div>
+          {banner.visible && (
+            <MessageBanner
+              message={banner.message}
+              type={banner.type}
+              onClose={closeBanner}
+            />
+          )}
+        </div>
         <div className="text-white flex items-center justify-center min-h-screen">
           <div className="bg-gray-800 p-6 rounded-lg w-80">
             <h1
