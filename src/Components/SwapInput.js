@@ -6,6 +6,8 @@ import {
   selectFirstToken,
   selectMatchingSymbols,
   setPair,
+  setToken,
+  setTokenContract,
 } from "../store/interactions";
 import { setMatchingSymbols } from "../store/reducers/markets";
 
@@ -22,8 +24,10 @@ function SwapInput({ isInput, placeholder }) {
   const dispatch = useDispatch();
 
   const loadBalance = async () => {
+    console.log(`Loading balance for ${symbol}`);
     const erc20Contract = tokenContracts[symbol];
     if (!erc20Contract) {
+      console.log("Token contract not loaded");
       return;
     }
     const tokenBalance = await erc20Contract.balanceOf(address);
@@ -34,10 +38,10 @@ function SwapInput({ isInput, placeholder }) {
 
   React.useEffect(() => {
     // Load balance if a pair is selected
-    if (address !== null && selectedPair !== null) {
+    if (address !== null) {
       loadBalance();
     }
-  }, [selectedPair, symbol]);
+  }, [selectedPair, symbol, tokenContracts]);
 
   const handleTokenSelect = async (selectedOption, field) => {
     console.log(`Selected ${selectedOption.value} for ${field}`);
@@ -52,6 +56,7 @@ function SwapInput({ isInput, placeholder }) {
       const matchingSymbols = relevantPairs.map((pair) =>
         pair.quote === val ? pair.base : pair.quote
       );
+      setTokenContract(val, pairs, tokenContracts, dispatch);
       selectMatchingSymbols(matchingSymbols, dispatch);
     } else {
       // Choose the pair that would allow swapping the selected tokens

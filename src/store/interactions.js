@@ -142,6 +142,37 @@ export const selectMatchingSymbols = (symbols, dispatch) => {
   dispatch(setMatchingSymbols(symbols));
 };
 
+export const setTokenContract = async (
+  symbol,
+  pairs,
+  tokenContracts,
+  dispatch
+) => {
+  const provider = getProvider();
+  const signer = await provider.getSigner();
+
+  // Find a pair that includes the token to get the token contract
+  const pair = pairs.find(
+    (pair) => pair.base === symbol || pair.quote === symbol
+  );
+  const pairContract = new ethers.Contract(
+    pair.pairAddress,
+    IUniswapV2PairABI.abi,
+    signer
+  );
+  let tokenAddress;
+  if (pair.base === symbol) {
+    tokenAddress = await pairContract.token0();
+  } else {
+    tokenAddress = await pairContract.token1();
+  }
+  const tokenContract = new ethers.Contract(tokenAddress, IERC20.abi, signer);
+
+  // Add the token contract to the token contracts dict
+  tokenContracts = { ...tokenContracts, [symbol]: tokenContract };
+  dispatch(setTokenContracts(tokenContracts));
+};
+
 export const setPair = async (pair, dispatch) => {
   // Build token contract dict
   const provider = getProvider();
