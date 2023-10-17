@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import SearchableDropdown from "./SearchableDropdown";
-import { tokens } from "../utils_fe";
+import { tokens, toEth } from "../utils_fe";
 import {
   selectFirstToken,
   selectMatchingSymbols,
@@ -28,7 +28,7 @@ function SwapInput({ isInput, placeholder }) {
     }
     const tokenBalance = await erc20Contract.balanceOf(address);
     const decimals = await erc20Contract.decimals();
-    const balance = tokens(tokenBalance, decimals);
+    const balance = toEth(tokenBalance, decimals);
     setBalance(balance);
   };
 
