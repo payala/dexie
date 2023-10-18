@@ -4,13 +4,14 @@ import { act } from "react-dom/test-utils";
 export const tokens = createSlice({
   name: "markets",
   initialState: {
-    dexContracts: {},
-    pairs: [],
-    symbols: [],
-    selectedSymbol: null,
-    matchingSymbols: [],
-    selectedPair: null,
-    selectedPairContract: null,
+    dexContracts: {}, // Dict with contracts for all dexes
+    pairs: [], // List of all available pairs
+    symbols: [], // List of all available symbols
+    selectedSymbol: null, // Stores the first selected symbol
+    matchingSymbols: [], // Stores symbols that would have a pair with selectedSymbol
+    selectedPair: null, // Stores the pair info once two symbols are selected
+    selectedPairContract: null, // Stores the contract for the selected pair
+    reversed: false, // false if token0 = input && token1 = output
   },
   reducers: {
     setPairs: (state, action) => {
@@ -34,6 +35,9 @@ export const tokens = createSlice({
     setSelectedPairContract: (state, action) => {
       state.selectedPairContract = action.payload;
     },
+    setReversed: (state, action) => {
+      state.reversed = action.payload;
+    },
   },
 });
 
@@ -45,6 +49,7 @@ export const {
   setMatchingSymbols,
   setSelectedPair,
   setSelectedPairContract,
+  setReversed,
 } = tokens.actions;
 
 export default tokens.reducer;

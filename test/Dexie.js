@@ -103,7 +103,7 @@ describe("Dexie", async function () {
         ).to.approximately(expectedOutputAmount, outputTolerance);
       });
 
-      it("allows calculating in reverse too", async () => {
+      it("allows calculating the output amount in reverse too", async () => {
         expect(
           (
             await dexie.getAmountsOut(uniswapV2Router, expectedOutputAmount, [
@@ -112,6 +112,28 @@ describe("Dexie", async function () {
             ])
           )[1]
         ).to.approximately(inputAmount, inputTolerance);
+      });
+
+      it("calculates input amount for the given output token swap", async () => {
+        expect(
+          (
+            await dexie.getAmountsIn(uniswapV2Router, expectedOutputAmount, [
+              inputToken,
+              outputToken,
+            ])
+          )[0]
+        ).to.approximately(inputAmount, inputTolerance);
+      });
+
+      it("allows calculating the input amount in reverse too", async () => {
+        expect(
+          (
+            await dexie.getAmountsIn(uniswapV2Router, inputAmount, [
+              outputToken,
+              inputToken,
+            ])
+          )[0]
+        ).to.approximately(expectedOutputAmount, outputTolerance);
       });
     });
   });

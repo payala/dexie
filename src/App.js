@@ -15,6 +15,7 @@ import {
   loadTokens,
 } from "./store/interactions";
 import Navbar from "./Components/Navbar";
+import markets from "./store/reducers/markets";
 
 function App() {
   const [banner, setBanner] = React.useState({
@@ -22,8 +23,13 @@ function App() {
     message: "",
     type: "",
   });
+  const [rateInfo, setRateInfo] = React.useState([]);
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const account = useSelector((state) => state.provider.account);
+  const tokenContracts = useSelector((state) => state.markets.tokenContracts);
+  const reversed = useSelector((state) => state.markets.reversed);
+  const dexContracts = useSelector((state) => state.markets.dexContracts);
+  const selectedPair = useSelector((state) => state.markets.selectedPair);
   const dispatch = useDispatch();
 
   const loadBlockchainData = async () => {
@@ -51,6 +57,12 @@ function App() {
     loadBlockchainData();
   }, []);
 
+  React.useEffect(() => {
+    const token0Contract = tokenContracts[selectedPair.base];
+    const token1Contract = tokenContracts[selectedPair.quote];
+    const rateInfo = getRateInfo(token0Contract, token1Contract, reversed);
+  }, [selectedPair]);
+
   const showError = (msg) => {
     setBanner({ visible: true, message: msg, type: "error" });
   };
@@ -66,6 +78,8 @@ function App() {
   const closeBanner = () => {
     setBanner({ visible: false, message: "", type: "" });
   };
+
+  const handleSwap = () => {};
 
   return (
     <>
@@ -132,7 +146,10 @@ function App() {
             </div>
 
             {/* <!-- Swap Button --> */}
-            <button className="w-full bg-blue-500 hover:bg-blue-600 rounded-lg p-2 text-white">
+            <button
+              onClick={handleSwap}
+              className="w-full bg-blue-500 hover:bg-blue-600 rounded-lg p-2 text-white"
+            >
               Swap
             </button>
           </div>

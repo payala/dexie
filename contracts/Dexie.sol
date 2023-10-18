@@ -11,6 +11,10 @@ import "hardhat/console.sol";
 
 contract Dexie {
 
+    function getAmountsIn(address _dexAddress, uint256 _amountOut, address[] memory _path) public view returns (uint[] memory _amounts) {
+        return IUniswapV2Router02(_dexAddress).getAmountsIn(_amountOut, _path);
+    }
+
     function getAmountsOut(address _dexAddress, uint256 _amountIn, address[] memory _path) public view returns (uint[] memory _amounts) {
         return IUniswapV2Router02(_dexAddress).getAmountsOut(_amountIn, _path);
     }
