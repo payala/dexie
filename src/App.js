@@ -28,7 +28,6 @@ function App() {
   const account = useSelector((state) => state.provider.account);
   const tokenContracts = useSelector((state) => state.markets.tokenContracts);
   const reversed = useSelector((state) => state.markets.reversed);
-  const dexContracts = useSelector((state) => state.markets.dexContracts);
   const selectedPair = useSelector((state) => state.markets.selectedPair);
   const dispatch = useDispatch();
 
@@ -57,11 +56,11 @@ function App() {
     loadBlockchainData();
   }, []);
 
-  React.useEffect(() => {
-    const token0Contract = tokenContracts[selectedPair.base];
-    const token1Contract = tokenContracts[selectedPair.quote];
-    const rateInfo = getRateInfo(token0Contract, token1Contract, reversed);
-  }, [selectedPair]);
+  // React.useEffect(() => {
+  //   const token0Contract = tokenContracts[selectedPair.base];
+  //   const token1Contract = tokenContracts[selectedPair.quote];
+  //   // const rateInfo = getRateInfo(token0Contract, token1Contract, reversed);
+  // }, [selectedPair]);
 
   const showError = (msg) => {
     setBanner({ visible: true, message: msg, type: "error" });

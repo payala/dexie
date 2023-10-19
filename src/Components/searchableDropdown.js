@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import Select from "react-select";
+import Select, { createFilter } from "react-select";
 
 const DropdownIndicator = () => null;
 
@@ -59,6 +59,9 @@ function SearchableDropdown({
         )
         .map((token) => ({ value: token, label: token }));
 
+      // It makes no sense to display more than 800 items, the search needs to be narrowed
+      // down by typing
+      filtered.length = Math.min(filtered.length, 800);
       setFilteredOptions(filtered);
     } else {
       // Initially start with some common tokens
@@ -82,6 +85,7 @@ function SearchableDropdown({
   return (
     <Select
       options={filteredOptions}
+      filterOption={createFilter({ ignoreAccents: false })} // Speed up while typing
       onInputChange={setInputValue}
       placeholder={placeholder}
       onChange={onTokenSelect}
