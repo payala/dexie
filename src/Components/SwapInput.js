@@ -19,6 +19,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
   const tokenContracts = useSelector((state) => state.tokens.contracts);
   const selectedPair = useSelector((state) => state.markets.selectedPair);
   const address = useSelector((state) => state.provider.account);
+  const balances = useSelector((state) => state.tokens.balances);
   const prevSelectedSymbol = useSelector(
     (state) => state.markets.selectedSymbol
   );
@@ -49,7 +50,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
     if (address !== null) {
       loadBalance();
     }
-  }, [selectedPair, symbol, tokenContracts]);
+  }, [selectedPair, symbol, tokenContracts, balances]);
 
   const handleTokenSelect = async (selectedOption, field) => {
     console.log(`Selected ${selectedOption.value} for ${field}`);

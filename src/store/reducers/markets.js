@@ -1,7 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { act } from "react-dom/test-utils";
 
-export const tokens = createSlice({
+export const markets = createSlice({
   name: "markets",
   initialState: {
     dexContracts: {}, // Dict with contracts for all dexes
@@ -11,6 +10,7 @@ export const tokens = createSlice({
     matchingSymbols: [], // Stores symbols that would have a pair with selectedSymbol
     selectedPair: null, // Stores the pair info once two symbols are selected
     selectedPairContract: null, // Stores the contract for the selected pair
+    bestRateAt: null, // Stores the best rate found for swapping
   },
   reducers: {
     setPairs: (state, action) => {
@@ -34,6 +34,10 @@ export const tokens = createSlice({
     setSelectedPairContract: (state, action) => {
       state.selectedPairContract = action.payload;
     },
+    setBestRateAt: (state, action) => {
+      console.log(`setting best rate to ${action.payload}`);
+      state.bestRateAt = action.payload;
+    },
   },
 });
 
@@ -45,6 +49,7 @@ export const {
   setMatchingSymbols,
   setSelectedPair,
   setSelectedPairContract,
-} = tokens.actions;
+  setBestRateAt,
+} = markets.actions;
 
-export default tokens.reducer;
+export default markets.reducer;

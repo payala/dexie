@@ -13,6 +13,9 @@ import {
   loadNetwork,
   getProvider,
   loadDexie,
+  storeBestRateDex,
+  executeBestRateSwap,
+  loadBalances,
 } from "./store/interactions";
 import Navbar from "./Components/Navbar";
 import markets from "./store/reducers/markets";
@@ -39,6 +42,7 @@ function App() {
   const tokenContracts = useSelector((state) => state.tokens.contracts);
   const selectedPair = useSelector((state) => state.markets.selectedPair);
   const dexie = useSelector((state) => state.dexie.contract);
+  const bestRateAt = useSelector((state) => state.markets.bestRateAt);
 
   const dispatch = useDispatch();
 
@@ -83,7 +87,24 @@ function App() {
     setBanner({ visible: false, message: "", type: "" });
   };
 
-  const handleSwap = () => {};
+  const handleSwap = async () => {
+    const provider = await getProvider();
+    const signer = await provider.getSigner();
+    const inputContract = tokenContracts[selectedPair.base];
+    const outputContract = tokenContracts[selectedPair.quote];
+    const result = await executeBestRateSwap(
+      dexie,
+      bestRateAt,
+      dexContracts,
+      inputContract,
+      outputContract,
+      inputValue,
+      0,
+      signer
+    );
+    const tokens = Object.values(tokenContracts);
+    loadBalances(tokens, account, dispatch);
+  };
 
   const calculateRate = async (fixedInput, value) => {
     if (!selectedPair || !value) {
@@ -127,6 +148,7 @@ function App() {
     const rateInfo = await calculateRate(true, parsedVal);
     const bestRate = getBestRateFromRateInfo(rateInfo);
     setOutputValue(bestRate.amountOut);
+    storeBestRateDex(bestRate, dispatch);
   };
 
   const setInputForOutput = async (outputValue) => {
@@ -141,6 +163,7 @@ function App() {
     const rateInfo = await calculateRate(false, parsedVal);
     const bestRate = getBestRateFromRateInfo(rateInfo);
     setInputValue(bestRate.amountIn);
+    storeBestRateDex(bestRate, dispatch);
   };
 
   React.useEffect(() => {

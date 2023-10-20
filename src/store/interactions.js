@@ -16,6 +16,7 @@ import {
   setSelectedSymbol,
   setMatchingSymbols,
   setSelectedPair,
+  setBestRateAt,
 } from "./reducers/markets";
 
 import IUniswapV2FactoryABI from "@uniswap/v2-core/build/IUniswapV2Factory.json";
@@ -198,6 +199,11 @@ export const setPair = async (pair, dispatch) => {
   dispatch(setTokenContracts(tokens));
   dispatch(setSelectedPair(pair));
 };
+
+export const storeBestRateDex = (bestRate, dispatch) => {
+  console.log(`storeBestRate: ${bestRate.name}`);
+  dispatch(setBestRateAt(bestRate.name));
+};
 // --------------------------------------------------------------------------------------
 // LOAD CONTRACTS
 export const loadDexie = async (provider, chainId, dispatch) => {
@@ -214,9 +220,53 @@ export const loadDexie = async (provider, chainId, dispatch) => {
 //------------------------------------------------------------------------
 // Load Balances & Shares
 
-export const loadBalances = async (amm, tokens, account, dispatch) => {
-  const balance1 = await tokens[0].balanceOf(account);
-  const balance2 = await tokens[1].balanceOf(account);
+export const loadBalances = async (tokens, account, dispatch) => {
+  const balances = await Promise.all(
+    tokens.map(async (token) => await token.balanceOf(account))
+  );
 
-  dispatch(setBalances([toEth(balance1), toEth(balance2)]));
+  const decimals = await Promise.all(
+    tokens.map(async (token) => await token.decimals())
+  );
+
+  dispatch(
+    setBalances([
+      toEth(balances[0], decimals[0]),
+      toEth(balances[1], decimals[1]),
+    ])
+  );
+};
+
+//------------------------------------------------------------------------
+// Swapping
+
+export const executeBestRateSwap = async (
+  dexie,
+  bestRateAt,
+  dexContracts,
+  inputTokenContract,
+  outputTokenContract,
+  inputAmount,
+  minOutputAmount,
+  signer
+) => {
+  const bestDex = dexContracts.find((dex) => dex.name === bestRateAt);
+  const inputDecimals = await inputTokenContract.decimals();
+  const outputDecimals = await outputTokenContract.decimals();
+  const inputAmountWei = tokens(inputAmount, inputDecimals);
+  const minOutputAmountWei = tokens(minOutputAmount, outputDecimals);
+  // Approve sending tokens
+  const approveTx = await inputTokenContract.approve(dexie, inputAmountWei);
+  await approveTx.wait();
+  // Now do the swap if all went fine
+  const tx = await dexie
+    .connect(signer)
+    .swapOnUniV2(
+      bestDex.router,
+      [inputTokenContract.target, outputTokenContract.target],
+      inputAmountWei,
+      minOutputAmountWei
+    );
+  const result = await tx.wait();
+  return result;
 };
