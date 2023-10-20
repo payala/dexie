@@ -76,15 +76,30 @@ function App() {
     loadBlockchainData();
   }, []);
 
-  const showError = (msg) => {
-    setBanner({ visible: true, message: msg, type: "error" });
+  const showInProgress = (msg, withTimeout = false) => {
+    setBanner({
+      visible: true,
+      message: msg,
+      type: "warning",
+      withTimeout: withTimeout,
+    });
   };
 
-  const showSuccess = (msg) => {
+  const showError = (msg, withTimeout = false) => {
+    setBanner({
+      visible: true,
+      message: msg,
+      type: "error",
+      withTimeout: withTimeout,
+    });
+  };
+
+  const showSuccess = (msg, withTimeout = false) => {
     setBanner({
       visible: true,
       message: msg,
       type: "success",
+      withTimeout: withTimeout,
     });
   };
 
@@ -93,22 +108,28 @@ function App() {
   };
 
   const handleSwap = async () => {
-    const provider = await getProvider();
-    const signer = await provider.getSigner();
-    const inputContract = tokenContracts[selectedPair.base];
-    const outputContract = tokenContracts[selectedPair.quote];
-    const result = await executeBestRateSwap(
-      dexie,
-      bestRateAt,
-      dexContracts,
-      inputContract,
-      outputContract,
-      inputValue,
-      0,
-      signer
-    );
-    const tokens = Object.values(tokenContracts);
-    loadBalances(tokens, account, dispatch);
+    showInProgress("Swap in progress");
+    try {
+      const provider = await getProvider();
+      const signer = await provider.getSigner();
+      const inputContract = tokenContracts[selectedPair.base];
+      const outputContract = tokenContracts[selectedPair.quote];
+      const result = await executeBestRateSwap(
+        dexie,
+        bestRateAt,
+        dexContracts,
+        inputContract,
+        outputContract,
+        inputValue,
+        0,
+        signer
+      );
+      const tokens = Object.values(tokenContracts);
+      loadBalances(tokens, account, dispatch);
+      showSuccess("Swap completed successfully", true);
+    } catch (error) {
+      showError("Swap Failed", true);
+    }
   };
 
   const calculateRate = async (fixedInput, value) => {
@@ -206,6 +227,7 @@ function App() {
               message={banner.message}
               type={banner.type}
               onClose={closeBanner}
+              withTimeout={banner.withTimeout}
             />
           )}
         </div>
