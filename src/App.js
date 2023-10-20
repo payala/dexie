@@ -48,6 +48,7 @@ function App() {
   const selectedPair = useSelector((state) => state.markets.selectedPair);
   const dexie = useSelector((state) => state.dexie.contract);
   const bestRateAt = useSelector((state) => state.markets.bestRateAt);
+  const slippage = useSelector((state) => state.dexie.slippage);
 
   const dispatch = useDispatch();
 
@@ -114,6 +115,7 @@ function App() {
       const signer = await provider.getSigner();
       const inputContract = tokenContracts[selectedPair.base];
       const outputContract = tokenContracts[selectedPair.quote];
+      const minOutputValue = bestRate.amountOut * (1 - slippage / 100);
       const result = await executeBestRateSwap(
         dexie,
         bestRateAt,
@@ -121,7 +123,7 @@ function App() {
         inputContract,
         outputContract,
         inputValue,
-        0,
+        minOutputValue,
         signer
       );
       const tokens = Object.values(tokenContracts);
