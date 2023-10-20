@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-
+import { toEth, tokens } from "./utils_fe";
 import logo from "./logo.svg";
 import "./App.css";
 import SwapDetails from "./Components/SwapDetails";
@@ -12,10 +12,17 @@ import {
   loadMarkets,
   loadNetwork,
   getProvider,
-  loadTokens,
+  loadDexie,
 } from "./store/interactions";
 import Navbar from "./Components/Navbar";
 import markets from "./store/reducers/markets";
+
+import Dexie from "./abis/Dexie.json";
+import {
+  getBestRateFromRateInfo,
+  getRateInfoFixedInput,
+  getRateInfoFixedOutput,
+} from "./dexLogic";
 
 function App() {
   const [banner, setBanner] = React.useState({
@@ -24,11 +31,15 @@ function App() {
     type: "",
   });
   const [rateInfo, setRateInfo] = React.useState([]);
+  const [inputValue, setInputValue] = React.useState("");
+  const [outputValue, setOutputValue] = React.useState("");
+
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const account = useSelector((state) => state.provider.account);
-  const tokenContracts = useSelector((state) => state.markets.tokenContracts);
-  const reversed = useSelector((state) => state.markets.reversed);
+  const tokenContracts = useSelector((state) => state.tokens.contracts);
   const selectedPair = useSelector((state) => state.markets.selectedPair);
+  const dexie = useSelector((state) => state.dexie.contract);
+
   const dispatch = useDispatch();
 
   const loadBlockchainData = async () => {
@@ -49,18 +60,12 @@ function App() {
     // Initiate contracts
     await loadDexes(provider, chainId, dispatch);
     await loadMarkets(provider, dispatch);
-    // todo: await loadDexie
+    await loadDexie(provider, chainId, dispatch);
   };
 
   React.useEffect(() => {
     loadBlockchainData();
   }, []);
-
-  // React.useEffect(() => {
-  //   const token0Contract = tokenContracts[selectedPair.base];
-  //   const token1Contract = tokenContracts[selectedPair.quote];
-  //   // const rateInfo = getRateInfo(token0Contract, token1Contract, reversed);
-  // }, [selectedPair]);
 
   const showError = (msg) => {
     setBanner({ visible: true, message: msg, type: "error" });
@@ -79,6 +84,78 @@ function App() {
   };
 
   const handleSwap = () => {};
+
+  const calculateRate = async (fixedInput, value) => {
+    if (!selectedPair || !value) {
+      return;
+    }
+    const inputContract = tokenContracts[selectedPair.base];
+    const outputContract = tokenContracts[selectedPair.quote];
+
+    if (fixedInput) {
+      const decimals = await inputContract.decimals();
+      const inputVal = tokens(value, decimals);
+      return getRateInfoFixedInput(
+        inputContract,
+        outputContract,
+        inputVal,
+        dexContracts,
+        dexie
+      );
+    } else {
+      const decimals = await outputContract.decimals();
+      const outputVal = tokens(value, decimals);
+      return getRateInfoFixedOutput(
+        inputContract,
+        outputContract,
+        outputVal,
+        dexContracts,
+        dexie
+      );
+    }
+  };
+
+  const setOutputForInput = async (inputValue) => {
+    const parsedVal = Number(inputValue);
+    if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
+      if (parsedVal < 0) {
+        setInputValue(0);
+      }
+      setOutputValue(0);
+      return;
+    }
+    const rateInfo = await calculateRate(true, parsedVal);
+    const bestRate = getBestRateFromRateInfo(rateInfo);
+    setOutputValue(bestRate.amountOut);
+  };
+
+  const setInputForOutput = async (outputValue) => {
+    const parsedVal = Number(outputValue);
+    if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
+      setInputValue(0);
+      if (parsedVal < 0) {
+        setOutputValue(0);
+      }
+      return;
+    }
+    const rateInfo = await calculateRate(false, parsedVal);
+    const bestRate = getBestRateFromRateInfo(rateInfo);
+    setInputValue(bestRate.amountIn);
+  };
+
+  React.useEffect(() => {
+    setOutputForInput(inputValue);
+  }, [selectedPair]);
+
+  const handleInputChanged = async (value) => {
+    setInputValue(value);
+    setOutputForInput(value);
+  };
+
+  const handleOutputChanged = async (value) => {
+    setOutputValue(value);
+    setInputForOutput(value);
+  };
 
   return (
     <>
@@ -101,7 +178,12 @@ function App() {
             >
               Dexie
             </h1>
-            <SwapInput isInput={true} placeholder="Input Amount" />
+            <SwapInput
+              isInput={true}
+              placeholder="Input Amount"
+              valueOverride={inputValue}
+              onInputChanged={handleInputChanged}
+            />
             {/* <!-- Swap Arrow --> */}
             <div className="text-center my-2 cursor-pointer">
               <svg
@@ -121,7 +203,12 @@ function App() {
             </div>
 
             {/* <!-- Output Field --> */}
-            <SwapInput isInput={false} placeholder="Output Amount" />
+            <SwapInput
+              isInput={false}
+              placeholder="Output Amount"
+              valueOverride={outputValue}
+              onInputChanged={handleOutputChanged}
+            />
 
             {/* <!-- Slippage Info --> */}
             <div className="bg-gray-700 p-4 rounded-lg mb-2">

@@ -22,6 +22,8 @@ import IUniswapV2FactoryABI from "@uniswap/v2-core/build/IUniswapV2Factory.json"
 import IUniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
 import IUniswapV2PairABI from "@uniswap/v2-core/build/IUniswapV2Pair.json";
 import IERC20 from "@openzeppelin/contracts/build/contracts/ERC20.json";
+import DexieABI from "../abis/Dexie.json";
+import { setContract } from "./reducers/dexie";
 
 export const loadAccount = async (dispatch) => {
   // Fetch accounts
@@ -29,7 +31,6 @@ export const loadAccount = async (dispatch) => {
   const accounts = await window.ethereum.request({
     method: "eth_requestAccounts",
   });
-  console.log("Given");
   const account = ethers.getAddress(accounts[0]);
   dispatch(setAccount(account));
 
@@ -58,38 +59,40 @@ export const loadNetwork = async (provider, dispatch) => {
 // LOAD EXCHANGES
 
 export const loadDexes = async (provider, chainId, dispatch) => {
-  console.log(chainId);
+  const signer = await provider.getSigner();
   const uniswapFactory = new ethers.Contract(
     config[chainId].DEXES.uniswap.FACTORY_ADDRESS,
     IUniswapV2FactoryABI.abi,
-    provider
+    signer
   );
   const uniswapRouter = new ethers.Contract(
     config[chainId].DEXES.uniswap.V2_ROUTER_02_ADDRESS,
     IUniswapV2RouterABI.abi,
-    provider
+    signer
   );
   const sushiswapFactory = new ethers.Contract(
     config[chainId].DEXES.sushiswap.FACTORY_ADDRESS,
     IUniswapV2FactoryABI.abi,
-    provider
+    signer
   );
   const sushiswapRouter = new ethers.Contract(
     config[chainId].DEXES.sushiswap.V2_ROUTER_02_ADDRESS,
     IUniswapV2RouterABI.abi,
-    provider
+    signer
   );
 
-  const dexContracts = {
-    uniswap: {
+  const dexContracts = [
+    {
+      name: "Uniswap",
       router: uniswapRouter,
       factory: uniswapFactory,
     },
-    sushiswap: {
+    {
+      name: "Sushiswap",
       router: sushiswapRouter,
       factory: sushiswapFactory,
     },
-  };
+  ];
 
   dispatch(setDexContracts(dexContracts));
 };
@@ -127,10 +130,9 @@ export const loadMarkets = async (provider, dispatch) => {
       }
       dispatch(setPairs(pairs));
       dispatch(setSymbols([...symbols]));
-      //console.log(`symbols: ${[...symbols]}`);
     })
     .catch((err) => {
-      console.log(err.message);
+      console.warn(err.message);
     });
 };
 
@@ -166,15 +168,15 @@ export const setTokenContract = async (
   } else {
     tokenAddress = await pairContract.token1();
   }
-  const tokenContract = new ethers.Contract(tokenAddress, IERC20.abi, signer);
 
+  const tokenContract = new ethers.Contract(tokenAddress, IERC20.abi, signer);
   // Add the token contract to the token contracts dict
   tokenContracts = { ...tokenContracts, [symbol]: tokenContract };
   dispatch(setTokenContracts(tokenContracts));
 };
 
 export const setPair = async (pair, dispatch) => {
-  // Build token contract dict
+  // A pair has been chosen, get the pair and token contracts
   const provider = getProvider();
   const signer = await provider.getSigner();
   const pairContract = new ethers.Contract(
@@ -188,15 +190,26 @@ export const setPair = async (pair, dispatch) => {
   const token0Contract = new ethers.Contract(token0Address, IERC20.abi, signer);
   const token1Contract = new ethers.Contract(token1Address, IERC20.abi, signer);
 
+  // assign by symbols base and quote with their corresponding contract
   const tokens = {
-    [pair.base]: token0Contract,
-    [pair.quote]: token1Contract,
+    [await token0Contract.symbol()]: token0Contract,
+    [await token1Contract.symbol()]: token1Contract,
   };
   dispatch(setTokenContracts(tokens));
   dispatch(setSelectedPair(pair));
 };
 // --------------------------------------------------------------------------------------
 // LOAD CONTRACTS
+export const loadDexie = async (provider, chainId, dispatch) => {
+  const signer = provider.getSigner();
+  const dexie = new ethers.Contract(
+    config[chainId].dexie.address,
+    DexieABI,
+    provider
+  );
+
+  dispatch(setContract(dexie));
+};
 
 //------------------------------------------------------------------------
 // Load Balances & Shares

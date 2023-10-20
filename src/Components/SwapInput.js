@@ -11,9 +11,10 @@ import {
 } from "../store/interactions";
 import { setMatchingSymbols } from "../store/reducers/markets";
 
-function SwapInput({ isInput, placeholder }) {
+function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
   const [symbol, setSymbol] = React.useState("");
   const [balance, setBalance] = React.useState(0);
+  const [input, setInput] = React.useState(0);
   const pairs = useSelector((state) => state.markets.pairs);
   const tokenContracts = useSelector((state) => state.tokens.contracts);
   const selectedPair = useSelector((state) => state.markets.selectedPair);
@@ -23,11 +24,18 @@ function SwapInput({ isInput, placeholder }) {
   );
   const dispatch = useDispatch();
 
+  const handleValueChanged = (e) => {
+    setInput(e.target.value);
+
+    try {
+      onInputChanged(e.target.value);
+    } catch {}
+  };
+
   const loadBalance = async () => {
-    console.log(`Loading balance for ${symbol}`);
     const erc20Contract = tokenContracts[symbol];
     if (!erc20Contract) {
-      console.log("Token contract not loaded");
+      console.warn("Token contract not loaded");
       return;
     }
     const tokenBalance = await erc20Contract.balanceOf(address);
@@ -62,18 +70,28 @@ function SwapInput({ isInput, placeholder }) {
       // Choose the pair that would allow swapping the selected tokens
       const inputSymbol = prevSelectedSymbol;
       const outputSymbol = val;
-      const chosenPair = pairs.filter(
+      const matchingPairs = pairs.filter(
         (pair) =>
           (pair.quote === inputSymbol && pair.base === outputSymbol) ||
           (pair.base === inputSymbol && pair.quote === outputSymbol)
       );
-      if (chosenPair[0] === undefined) {
+
+      console.log(`Matching pairs: ${matchingPairs}`);
+      // It doesn't really matter which pair we choose, we are only using it to
+      // access the token addresses later
+      let chosenPair = { ...matchingPairs[0] };
+
+      // Change the base and quote to reflect the chosen direction
+      // base = input
+      // quote = output
+      chosenPair.base = inputSymbol;
+      chosenPair.quote = outputSymbol;
+      if (chosenPair === undefined) {
         console.warn(
           `Pair between ${inputSymbol} and ${outputSymbol} not found`
         );
       } else {
-        console.log(`Matching pairs: ${chosenPair}`);
-        await setPair(chosenPair[0], dispatch);
+        await setPair(chosenPair, dispatch);
       }
     }
   };
@@ -82,9 +100,11 @@ function SwapInput({ isInput, placeholder }) {
     <div className={isInput ? "mb-0" : "mb-4"}>
       <div className="flex">
         <input
-          type="text"
+          type="number"
           placeholder={placeholder}
           className="block w-3/4 p-2 border rounded-l-lg bg-gray-700 placeholder-gray-500"
+          onChange={handleValueChanged}
+          value={valueOverride == null ? input : valueOverride}
         />
         <SearchableDropdown
           placeholder="Token"
