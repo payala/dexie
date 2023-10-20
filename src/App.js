@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { toEth, tokens } from "./utils_fe";
+import { fixNum, toEth, tokens } from "./utils_fe";
 import logo from "./logo.svg";
 import "./App.css";
 import SwapDetails from "./Components/SwapDetails";
@@ -40,6 +40,7 @@ function App() {
   const [rateInfo, setRateInfo] = React.useState([]);
   const [inputValue, setInputValue] = React.useState("");
   const [outputValue, setOutputValue] = React.useState("");
+  const [bestRate, setBestRate] = React.useState(null);
 
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const account = useSelector((state) => state.provider.account);
@@ -142,17 +143,27 @@ function App() {
 
   const setOutputForInput = async (inputValue) => {
     const parsedVal = Number(inputValue);
+    if (!selectedPair) {
+      return;
+    }
     if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
       if (parsedVal < 0) {
         setInputValue(0);
       }
       setOutputValue(0);
+      // Do a sample calculation to update the RateInfo even if no
+      // amounts are selected yet
+      const rateInfo = await calculateRate(true, 1);
+      const bestRate = getBestRateFromRateInfo(rateInfo);
+      setBestRate(bestRate);
+      storeBestRateDex(bestRate, dispatch);
       return;
     }
     const rateInfo = await calculateRate(true, parsedVal);
     const bestRate = getBestRateFromRateInfo(rateInfo);
     setOutputValue(bestRate.amountOut);
     storeBestRateDex(bestRate, dispatch);
+    setBestRate(bestRate);
   };
 
   const setInputForOutput = async (outputValue) => {
@@ -168,6 +179,7 @@ function App() {
     const bestRate = getBestRateFromRateInfo(rateInfo);
     setInputValue(bestRate.amountIn);
     storeBestRateDex(bestRate, dispatch);
+    setBestRate(bestRate);
   };
 
   React.useEffect(() => {
@@ -210,11 +222,23 @@ function App() {
             <SwapInput
               isInput={false}
               placeholder="Output Amount"
-              valueOverride={outputValue}
+              valueOverride={fixNum(outputValue, 10)}
               onInputChanged={handleOutputChanged}
             />
             <SlippageInfo />
-            <RateInfo>Rate: 1 ETH = 2000 DAI (Best rate at Uniswap)</RateInfo>
+            <RateInfo>
+              {bestRate
+                ? [
+                    `Rate:`,
+                    <br />,
+                    `1 ${selectedPair.base} = ${fixNum(bestRate.rate, 6)} ${
+                      selectedPair.quote
+                    }`,
+                    <br />,
+                    `(Best rate at ${bestRateAt})`,
+                  ]
+                : `Select two tokens to see the rate`}
+            </RateInfo>
             <button
               onClick={handleSwap}
               className="w-full bg-blue-500 hover:bg-blue-600 rounded-lg p-2 text-white"
