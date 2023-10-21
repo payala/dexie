@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import SearchableDropdown from "./SearchableDropdown";
-import { tokens, toEth } from "../utils_fe";
+import { tokens, toEth, fixNum } from "../utils_fe";
 import {
   selectFirstToken,
   selectMatchingSymbols,
@@ -127,7 +127,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
         Balance:{" "}
         {address
           ? thisSymbol()
-            ? `${balance} ${thisSymbol()}`
+            ? `${fixNum(balance, 6)} ${thisSymbol()}`
             : `Choose Token`
           : `Connect wallet`}
       </div>
