@@ -177,7 +177,13 @@ export const setTokenContract = async (
 };
 
 export const setPair = async (pair, dispatch) => {
-  // A pair has been chosen, get the pair and token contracts
+  if (!pair.pairAddress) {
+    // If only base or quote tokens are selected, just store it
+    dispatch(setSelectedPair(pair));
+    return;
+  }
+
+  // If a pair has been chosen, get the pair and token contracts
   const provider = getProvider();
   const signer = await provider.getSigner();
   const pairContract = new ethers.Contract(

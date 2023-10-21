@@ -73,7 +73,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
       );
       setTokenContract(val, pairs, tokenContracts, dispatch);
       selectMatchingSymbols(matchingSymbols, dispatch);
-      setSelectedPair({ ...selectedPair, base: val });
+      setPair({ ...selectedPair, base: val }, dispatch);
     } else {
       // Choose the pair that would allow swapping the selected tokens
       const inputSymbol = prevSelectedSymbol;
@@ -124,7 +124,12 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
         />
       </div>
       <div className="text-right text-gray-500 text-sm">
-        Balance: {address ? `${balance} ${thisSymbol()}` : `Connect wallet`}
+        Balance:{" "}
+        {address
+          ? thisSymbol()
+            ? `${balance} ${thisSymbol()}`
+            : `Choose Token`
+          : `Connect wallet`}
       </div>
     </div>
   );

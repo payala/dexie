@@ -23,6 +23,7 @@ import markets from "./store/reducers/markets";
 
 import Dexie from "./abis/Dexie.json";
 import {
+  fullSelectedPair,
   getBestRateFromRateInfo,
   getRateInfoFixedInput,
   getRateInfoFixedOutput,
@@ -136,7 +137,7 @@ function App() {
   };
 
   const calculateRate = async (fixedInput, value) => {
-    if (!selectedPair || !value) {
+    if (!fullSelectedPair(selectedPair) || !value) {
       return;
     }
     const inputContract = tokenContracts[selectedPair.base];
@@ -167,7 +168,7 @@ function App() {
 
   const setOutputForInput = async (inputValue) => {
     const parsedVal = Number(inputValue);
-    if (!selectedPair) {
+    if (!fullSelectedPair(selectedPair)) {
       return;
     }
     if (!Number.isFinite(parsedVal) || parsedVal <= 0) {

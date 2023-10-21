@@ -93,7 +93,7 @@ function SearchableDropdown({
       className="text-black w-1/4"
       styles={customStyles}
       components={{ DropdownIndicator }}
-      value={{ value: value, label: value }}
+      value={value ? { value: value, label: value } : undefined}
     />
   );
 }
