@@ -26,14 +26,22 @@ const getRateInfo = async (
           await dexie.getAmountsIn(dex.router.target, amountOut, path)
         )[0];
       }
+      const amountInWei = amountIn;
+      const amountOutWei = amountOut;
+      const amountInNat = toEth(amountIn, await inputTokenContract.decimals());
+      const amountOutNat = toEth(
+        amountOut,
+        await outputTokenContract.decimals()
+      );
+      const rate = Number(amountOutNat) / Number(amountInNat);
       return {
         name: dex.name,
         routerContract: dex.router,
-        amountIn: toEth(amountIn, await inputTokenContract.decimals()),
-        amountOut: toEth(amountOut, await outputTokenContract.decimals()),
-        amountInWei: amountIn,
-        amountOutWei: amountOut,
-        rate: Number(amountOut) / Number(amountIn),
+        amountIn: amountInNat,
+        amountOut: amountOutNat,
+        amountInWei: amountInWei,
+        amountOutWei: amountOutWei,
+        rate: rate,
       };
     })
   );
