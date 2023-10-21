@@ -16,6 +16,7 @@ import {
   storeBestRateDex,
   executeBestRateSwap,
   loadBalances,
+  setPair,
 } from "./store/interactions";
 import Navbar from "./Components/Navbar";
 import markets from "./store/reducers/markets";
@@ -219,6 +220,15 @@ function App() {
     setInputForOutput(value);
   };
 
+  const swapTokens = () => {
+    const newSelectedPair = {
+      ...selectedPair,
+      quote: selectedPair.base,
+      base: selectedPair.quote,
+    };
+    setPair(newSelectedPair, dispatch);
+  };
+
   return (
     <>
       <div className="flex-row bg-gray-900">
@@ -242,7 +252,7 @@ function App() {
               valueOverride={inputValue}
               onInputChanged={handleInputChanged}
             />
-            <SwapArrow />
+            <SwapArrow onClick={swapTokens} />
             <SwapInput
               isInput={false}
               placeholder="Output Amount"

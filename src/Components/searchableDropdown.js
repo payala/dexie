@@ -38,6 +38,7 @@ function SearchableDropdown({
   placeholder,
   onlyAvailablePairs,
   onTokenSelect,
+  value,
 }) {
   const symbols = useSelector((state) => state.markets.symbols);
   const matchingSymbols = useSelector((state) => state.markets.matchingSymbols);
@@ -92,6 +93,7 @@ function SearchableDropdown({
       className="text-black w-1/4"
       styles={customStyles}
       components={{ DropdownIndicator }}
+      value={{ value: value, label: value }}
     />
   );
 }

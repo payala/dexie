@@ -9,10 +9,9 @@ import {
   setToken,
   setTokenContract,
 } from "../store/interactions";
-import { setMatchingSymbols } from "../store/reducers/markets";
+import { setMatchingSymbols, setSelectedPair } from "../store/reducers/markets";
 
 function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
-  const [symbol, setSymbol] = React.useState("");
   const [balance, setBalance] = React.useState(0);
   const [input, setInput] = React.useState(0);
   const pairs = useSelector((state) => state.markets.pairs);
@@ -25,6 +24,13 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
   );
   const dispatch = useDispatch();
 
+  const thisSymbol = () => {
+    if (!selectedPair) {
+      return null;
+    }
+    return isInput ? selectedPair.base : selectedPair.quote;
+  };
+
   const handleValueChanged = (e) => {
     setInput(e.target.value);
 
@@ -34,6 +40,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
   };
 
   const loadBalance = async () => {
+    const symbol = thisSymbol();
     const erc20Contract = tokenContracts[symbol];
     if (!erc20Contract) {
       console.warn("Token contract not loaded");
@@ -50,12 +57,11 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
     if (address !== null) {
       loadBalance();
     }
-  }, [selectedPair, symbol, tokenContracts, balances]);
+  }, [selectedPair, tokenContracts, balances]);
 
   const handleTokenSelect = async (selectedOption, field) => {
     console.log(`Selected ${selectedOption.value} for ${field}`);
     const val = selectedOption.value;
-    setSymbol(val);
     if (isInput) {
       // Prepare the list of possible tokens for the output field
       selectFirstToken(val, dispatch);
@@ -67,6 +73,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
       );
       setTokenContract(val, pairs, tokenContracts, dispatch);
       selectMatchingSymbols(matchingSymbols, dispatch);
+      setSelectedPair({ ...selectedPair, base: val });
     } else {
       // Choose the pair that would allow swapping the selected tokens
       const inputSymbol = prevSelectedSymbol;
@@ -113,10 +120,11 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
             handleTokenSelect(selectedOption, "input")
           }
           onlyAvailablePairs={!isInput}
+          value={thisSymbol()}
         />
       </div>
       <div className="text-right text-gray-500 text-sm">
-        Balance: {address ? `${balance} ${symbol}` : `Connect wallet`}
+        Balance: {address ? `${balance} ${thisSymbol()}` : `Connect wallet`}
       </div>
     </div>
   );

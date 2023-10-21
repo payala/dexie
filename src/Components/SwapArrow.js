@@ -1,6 +1,6 @@
-function SwapArrow() {
+function SwapArrow({ onClick }) {
   return (
-    <div className="text-center my-2 cursor-pointer">
+    <div className="text-center my-2 cursor-pointer" onClick={onClick}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
