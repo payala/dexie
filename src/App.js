@@ -175,7 +175,6 @@ function App() {
       if (parsedVal < 0) {
         setInputValue(0);
       }
-      setOutputValue(0);
       // Do a sample calculation to update the RateInfo even if no
       // amounts are selected yet
       const rateInfo = await calculateRate(true, 1);
