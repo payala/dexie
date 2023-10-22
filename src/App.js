@@ -32,6 +32,7 @@ import Title from "./Components/Title";
 import SwapArrow from "./Components/SwapArrow";
 import SlippageInfo from "./Components/SlippageInfo";
 import RateInfo from "./Components/RateInfo";
+import Spinner from "./Components/Spinner";
 
 function App() {
   const [banner, setBanner] = React.useState({
@@ -43,6 +44,7 @@ function App() {
   const [inputValue, setInputValue] = React.useState("");
   const [outputValue, setOutputValue] = React.useState("");
   const [bestRate, setBestRate] = React.useState(null);
+  const [isUpdating, setIsUpdating] = React.useState(false);
 
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const account = useSelector((state) => state.provider.account);
@@ -55,6 +57,7 @@ function App() {
   const dispatch = useDispatch();
 
   const loadBlockchainData = async () => {
+    setIsUpdating(true);
     const provider = await getProvider();
     const chainId = await loadNetwork(provider, dispatch);
     console.log(chainId);
@@ -73,6 +76,7 @@ function App() {
     await loadDexes(provider, chainId, dispatch);
     await loadMarkets(provider, dispatch);
     await loadDexie(provider, chainId, dispatch);
+    setIsUpdating(false);
   };
 
   React.useEffect(() => {
@@ -171,6 +175,7 @@ function App() {
     if (!fullSelectedPair(selectedPair)) {
       return;
     }
+    setIsUpdating(true);
     if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
       if (parsedVal < 0) {
         setInputValue(0);
@@ -181,6 +186,7 @@ function App() {
       const bestRate = getBestRateFromRateInfo(rateInfo);
       setBestRate(bestRate);
       storeBestRateDex(bestRate, dispatch);
+      setIsUpdating(false);
       return;
     }
     const rateInfo = await calculateRate(true, parsedVal);
@@ -188,6 +194,7 @@ function App() {
     setOutputValue(bestRate.amountOut);
     storeBestRateDex(bestRate, dispatch);
     setBestRate(bestRate);
+    setIsUpdating(false);
   };
 
   const setInputForOutput = async (outputValue) => {
@@ -199,11 +206,13 @@ function App() {
       }
       return;
     }
+    setIsUpdating(true);
     const rateInfo = await calculateRate(false, parsedVal);
     const bestRate = getBestRateFromRateInfo(rateInfo);
     setInputValue(bestRate.amountIn);
     storeBestRateDex(bestRate, dispatch);
     setBestRate(bestRate);
+    setIsUpdating(false);
   };
 
   React.useEffect(() => {
@@ -265,9 +274,9 @@ function App() {
                 ? [
                     `Rate:`,
                     <br />,
-                    `1 ${selectedPair.base} = ${fixNum(bestRate.rate, 6)} ${
-                      selectedPair.quote
-                    }`,
+                    `1 ${selectedPair.base} = `,
+                    isUpdating ? <Spinner /> : fixNum(bestRate.rate, 6),
+                    ` ${selectedPair.quote}`,
                     <br />,
                     `(Best rate at ${bestRateAt})`,
                   ]
