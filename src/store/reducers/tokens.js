@@ -6,6 +6,7 @@ export const tokens = createSlice({
     contracts: {},
     decimals: {},
     balances: [0, 0],
+    tokenData: [],
   },
   reducers: {
     setTokenContracts: (state, action) => {
@@ -17,9 +18,13 @@ export const tokens = createSlice({
     setDecimals: (state, action) => {
       state.decimals = action.payload;
     },
+    setTokenData: (state, action) => {
+      state.tokenData = action.payload;
+    },
   },
 });
 
-export const { setTokenContracts, setBalances, setDecimals } = tokens.actions;
+export const { setTokenContracts, setBalances, setDecimals, setTokenData } =
+  tokens.actions;
 
 export default tokens.reducer;

@@ -4,7 +4,11 @@ import provider, {
   setProvider,
   setChainId,
 } from "./reducers/provider";
-import { setBalances, setTokenContracts } from "./reducers/tokens";
+import {
+  setBalances,
+  setTokenContracts,
+  setTokenData,
+} from "./reducers/tokens";
 import { toEth, tokens } from "../utils_fe";
 import { useSelector } from "react-redux";
 
@@ -102,7 +106,11 @@ export const loadDexes = async (provider, chainId, dispatch) => {
 // LOAD MARKETS
 
 export const loadMarkets = async (provider, dispatch) => {
-  fetch(
+  let uniswapPairs;
+  let uniswapSymbols;
+  let oneInchTokens;
+  // Fetch list of uniswap pairs from tokenlists.org
+  await fetch(
     `https://raw.githubusercontent.com/jab416171/uniswap-pairtokens/master/uniswap_pair_tokens.json`
   )
     .then((response) => {
@@ -129,12 +137,52 @@ export const loadMarkets = async (provider, dispatch) => {
         symbols.add(pair.quote);
         symbols.add(pair.base);
       }
-      dispatch(setPairs(pairs));
-      dispatch(setSymbols([...symbols]));
+      uniswapPairs = pairs;
+      uniswapSymbols = [...symbols];
     })
     .catch((err) => {
       console.warn(err.message);
     });
+  // Curate with the list of tokens from 1Inch also from tokenlists.org
+  await fetch(
+    `https://wispy-bird-88a7.uniswap.workers.dev/?url=http://tokens.1inch.eth.link`
+  )
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(
+          `Error Fetching Pairs data from 1Inch: The status is ${response.status}`
+        );
+      }
+      return response.json();
+    })
+    .then((actualData) => {
+      let symbols = [];
+
+      symbols = actualData.tokens.map((token) => ({
+        address: token.address,
+        chainId: token.chainId,
+        name: token.name,
+        symbol: token.symbol,
+        decimals: token.decimals,
+        logoURI: token.logoURI,
+      }));
+
+      oneInchTokens = symbols;
+    })
+    .catch((err) => {
+      console.warn(err.message);
+    });
+
+  // Remove all uniswap tokens and pairs which are not in 1Inch tokens
+  const oneInchSymbols = oneInchTokens.map((t) => t.symbol);
+  const pairs = uniswapPairs.filter(
+    (pair) =>
+      oneInchSymbols.includes(pair.quote) && oneInchSymbols.includes(pair.base)
+  );
+  const symbols = uniswapSymbols.filter((s) => oneInchSymbols.includes(s));
+  dispatch(setPairs(pairs));
+  dispatch(setSymbols([...symbols]));
+  dispatch(setTokenData(oneInchTokens));
 };
 
 export const selectFirstToken = (symbol, dispatch) => {
