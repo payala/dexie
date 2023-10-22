@@ -19,6 +19,8 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
   const selectedPair = useSelector((state) => state.markets.selectedPair);
   const address = useSelector((state) => state.provider.account);
   const balances = useSelector((state) => state.tokens.balances);
+  const tokenData = useSelector((state) => state.tokens.tokenData);
+
   const prevSelectedSymbol = useSelector(
     (state) => state.markets.selectedSymbol
   );
@@ -73,7 +75,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
       );
       setTokenContract(val, pairs, tokenContracts, dispatch);
       selectMatchingSymbols(matchingSymbols, dispatch);
-      setPair({ ...selectedPair, base: val }, dispatch);
+      setPair({ ...selectedPair, base: val }, tokenData, dispatch);
     } else {
       // Choose the pair that would allow swapping the selected tokens
       const inputSymbol = prevSelectedSymbol;
@@ -99,7 +101,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
           `Pair between ${inputSymbol} and ${outputSymbol} not found`
         );
       } else {
-        await setPair(chosenPair, dispatch);
+        await setPair(chosenPair, tokenData, dispatch);
       }
     }
   };

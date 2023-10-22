@@ -156,16 +156,18 @@ export const loadMarkets = async (provider, dispatch) => {
       return response.json();
     })
     .then((actualData) => {
-      let symbols = [];
+      let symbols = {};
 
-      symbols = actualData.tokens.map((token) => ({
-        address: token.address,
-        chainId: token.chainId,
-        name: token.name,
-        symbol: token.symbol,
-        decimals: token.decimals,
-        logoURI: token.logoURI,
-      }));
+      actualData.tokens.map((token) => {
+        symbols[token.symbol] = {
+          address: token.address,
+          chainId: token.chainId,
+          name: token.name,
+          symbol: token.symbol,
+          decimals: token.decimals,
+          logoURI: token.logoURI,
+        };
+      });
 
       oneInchTokens = symbols;
     })
@@ -174,7 +176,7 @@ export const loadMarkets = async (provider, dispatch) => {
     });
 
   // Remove all uniswap tokens and pairs which are not in 1Inch tokens
-  const oneInchSymbols = oneInchTokens.map((t) => t.symbol);
+  const oneInchSymbols = Object.keys(oneInchTokens);
   const pairs = uniswapPairs.filter(
     (pair) =>
       oneInchSymbols.includes(pair.quote) && oneInchSymbols.includes(pair.base)
@@ -224,7 +226,7 @@ export const setTokenContract = async (
   dispatch(setTokenContracts(tokenContracts));
 };
 
-export const setPair = async (pair, dispatch) => {
+export const setPair = async (pair, tokenData, dispatch) => {
   if (!pair.pairAddress) {
     // If only base or quote tokens are selected, just store it
     dispatch(setSelectedPair(pair));
@@ -234,23 +236,28 @@ export const setPair = async (pair, dispatch) => {
   // If a pair has been chosen, get the pair and token contracts
   const provider = getProvider();
   const signer = await provider.getSigner();
-  const pairContract = new ethers.Contract(
-    pair.pairAddress,
-    IUniswapV2PairABI.abi,
+  // Get token contract data from 1Inch, because it's more reliable than Uniswap
+  // pair contracts. Use the pair only to get the tokens.
+  const baseTokenAddress = tokenData[pair.base].address;
+  const quoteTokenAddress = tokenData[pair.quote].address;
+
+  const baseTokenContract = new ethers.Contract(
+    baseTokenAddress,
+    IERC20.abi,
     signer
   );
-  const token0Address = await pairContract.token0();
-  const token1Address = await pairContract.token1();
-
-  const token0Contract = new ethers.Contract(token0Address, IERC20.abi, signer);
-  const token1Contract = new ethers.Contract(token1Address, IERC20.abi, signer);
+  const quoteTokenContract = new ethers.Contract(
+    quoteTokenAddress,
+    IERC20.abi,
+    signer
+  );
 
   // assign by symbols base and quote with their corresponding contract
-  const tokens = {
-    [await token0Contract.symbol()]: token0Contract,
-    [await token1Contract.symbol()]: token1Contract,
+  const tokenContracts = {
+    [pair.base]: baseTokenContract,
+    [pair.quote]: quoteTokenContract,
   };
-  dispatch(setTokenContracts(tokens));
+  dispatch(setTokenContracts(tokenContracts));
   dispatch(setSelectedPair(pair));
 };
 

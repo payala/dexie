@@ -18,13 +18,23 @@ const getRateInfo = async (
   const rates = await Promise.all(
     dexContracts.map(async (dex) => {
       if (fixedInput) {
-        amountOut = (
-          await dexie.getAmountsOut(dex.router.target, amountIn, path)
-        )[1];
+        try {
+          amountOut = (
+            await dexie.getAmountsOut(dex.router.target, amountIn, path)
+          )[1];
+        } catch (error) {
+          console.debug(`Error fetching pair in ${dex.name}`);
+          return;
+        }
       } else {
-        amountIn = (
-          await dexie.getAmountsIn(dex.router.target, amountOut, path)
-        )[0];
+        try {
+          amountIn = (
+            await dexie.getAmountsIn(dex.router.target, amountOut, path)
+          )[0];
+        } catch (error) {
+          console.debug(`Error fetching pair in ${dex.name}`);
+          return;
+        }
       }
       const amountInWei = amountIn;
       const amountOutWei = amountOut;
@@ -45,7 +55,8 @@ const getRateInfo = async (
       };
     })
   );
-  return rates;
+  const validRates = rates.filter((rate) => rate != null);
+  return validRates;
 };
 
 export const getRateInfoFixedInput = async (...args) => {
