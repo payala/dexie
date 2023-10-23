@@ -53,7 +53,7 @@ function App() {
 
   const dispatch = useDispatch();
 
-  const loadBlockchainData = async () => {
+  const loadBlockchainData = React.useCallback(async () => {
     setIsUpdating(true);
     const provider = await getProvider();
     const chainId = await loadNetwork(provider, dispatch);
@@ -74,11 +74,12 @@ function App() {
     await loadMarkets(provider, dispatch);
     await loadDexie(provider, chainId, dispatch);
     setIsUpdating(false);
-  };
+  }, [dispatch]);
 
   React.useEffect(() => {
+    console.log("Loading blockchain data");
     loadBlockchainData();
-  }, []);
+  }, [loadBlockchainData]);
 
   const showInProgress = (msg, withTimeout = false) => {
     setBanner({
