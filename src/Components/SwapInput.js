@@ -23,7 +23,6 @@ function SwapInput({
   const tokenContracts = useSelector((state) => state.tokens.contracts);
   const selectedPair = useSelector((state) => state.markets.selectedPair);
   const address = useSelector((state) => state.provider.account);
-  const balances = useSelector((state) => state.tokens.balances);
   const tokenData = useSelector((state) => state.tokens.tokenData);
 
   const prevSelectedSymbol = useSelector(
