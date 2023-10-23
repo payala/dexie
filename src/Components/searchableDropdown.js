@@ -81,7 +81,7 @@ function SearchableDropdown({
         ].map((v) => ({ value: v, label: v }))
       );
     }
-  }, [inputValue, symbols, matchingSymbols]);
+  }, [inputValue, symbols, matchingSymbols, onlyAvailablePairs]);
 
   return (
     <Select

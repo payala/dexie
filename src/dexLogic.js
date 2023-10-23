@@ -1,7 +1,5 @@
 import { toEth } from "./utils_fe";
 
-const ethers = require("ethers");
-
 const getRateInfo = async (
   fixedInput,
   inputTokenContract,

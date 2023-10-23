@@ -1,16 +1,11 @@
 import { ethers } from "ethers";
-import provider, {
-  setAccount,
-  setProvider,
-  setChainId,
-} from "./reducers/provider";
+import { setAccount, setProvider, setChainId } from "./reducers/provider";
 import {
   setBalances,
   setTokenContracts,
   setTokenData,
 } from "./reducers/tokens";
 import { toEth, tokens } from "../utils_fe";
-import { useSelector } from "react-redux";
 
 import config from "../config.json";
 import {
@@ -158,7 +153,7 @@ export const loadMarkets = async (provider, dispatch) => {
     .then((actualData) => {
       let symbols = {};
 
-      actualData.tokens.map((token) => {
+      for (const token of actualData.tokens) {
         symbols[token.symbol] = {
           address: token.address,
           chainId: token.chainId,
@@ -167,7 +162,7 @@ export const loadMarkets = async (provider, dispatch) => {
           decimals: token.decimals,
           logoURI: token.logoURI,
         };
-      });
+      }
 
       oneInchTokens = symbols;
     })
@@ -268,7 +263,6 @@ export const storeBestRateDex = (bestRate, dispatch) => {
 // --------------------------------------------------------------------------------------
 // LOAD CONTRACTS
 export const loadDexie = async (provider, chainId, dispatch) => {
-  const signer = provider.getSigner();
   const dexie = new ethers.Contract(
     config[chainId].dexie.address,
     DexieABI,

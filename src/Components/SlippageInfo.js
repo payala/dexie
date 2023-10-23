@@ -1,4 +1,3 @@
-import react from "@heroicons/react";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSlippage } from "../store/reducers/dexie";

@@ -1,15 +1,13 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import SearchableDropdown from "./SearchableDropdown";
-import { tokens, toEth, fixNum } from "../utils_fe";
+import { toEth, fixNum } from "../utils_fe";
 import {
   selectFirstToken,
   selectMatchingSymbols,
   setPair,
-  setToken,
   setTokenContract,
 } from "../store/interactions";
-import { setMatchingSymbols, setSelectedPair } from "../store/reducers/markets";
 import Spinner from "./Spinner";
 
 function SwapInput({
@@ -66,7 +64,7 @@ function SwapInput({
     if (address !== null) {
       loadBalance();
     }
-  }, [selectedPair, tokenContracts, balances]);
+  }, [selectedPair, tokenContracts, balances, address]);
 
   const handleTokenSelect = async (selectedOption, field) => {
     console.log(`Selected ${selectedOption.value} for ${field}`);
