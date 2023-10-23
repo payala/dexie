@@ -44,6 +44,7 @@ function App() {
   const [inputValue, setInputValue] = React.useState("");
   const [outputValue, setOutputValue] = React.useState("");
   const [bestRate, setBestRate] = React.useState(null);
+  const [isSwapping, setIsSwapping] = React.useState(false);
   const [isUpdating, setIsUpdating] = React.useState(false);
 
   const dexContracts = useSelector((state) => state.markets.dexContracts);
@@ -115,6 +116,7 @@ function App() {
   };
 
   const handleSwap = async () => {
+    setIsSwapping(true);
     showInProgress("Swap in progress");
     try {
       const provider = await getProvider();
@@ -138,6 +140,7 @@ function App() {
     } catch (error) {
       showError("Swap Failed", true);
     }
+    setIsSwapping(false);
   };
 
   const calculateRate = async (fixedInput, value) => {
@@ -287,8 +290,9 @@ function App() {
             <button
               onClick={handleSwap}
               className="w-full bg-blue-500 hover:bg-blue-600 rounded-lg p-2 text-white"
+              disabled={isSwapping}
             >
-              Swap
+              {isSwapping ? <Spinner /> : "Swap"}
             </button>
           </div>
           <SwapDetails />
