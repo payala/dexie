@@ -268,7 +268,6 @@ function App() {
               placeholder="Input Amount"
               valueOverride={inputValue}
               onInputChanged={handleInputChanged}
-              isUpdating={isUpdating}
             />
             <SwapArrow onClick={swapTokens} />
             <SwapInput
@@ -276,7 +275,6 @@ function App() {
               placeholder="Output Amount"
               valueOverride={fixNum(outputValue, 10)}
               onInputChanged={handleOutputChanged}
-              isUpdating={isUpdating}
             />
             <SlippageInfo />
             <RateInfo>

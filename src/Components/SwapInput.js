@@ -10,15 +10,10 @@ import {
 } from "../store/interactions";
 import Spinner from "./Spinner";
 
-function SwapInput({
-  isInput,
-  placeholder,
-  onInputChanged,
-  valueOverride,
-  isUpdating,
-}) {
+function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
   const [balance, setBalance] = React.useState(0);
   const [input, setInput] = React.useState(0);
+  const [isBalanceUpdating, setIsBalanceUpdating] = React.useState(false);
   const pairs = useSelector((state) => state.markets.pairs);
   const tokenContracts = useSelector((state) => state.tokens.contracts);
   const selectedPair = useSelector((state) => state.markets.selectedPair);
@@ -46,6 +41,7 @@ function SwapInput({
   };
 
   const loadBalance = React.useCallback(async () => {
+    setIsBalanceUpdating(true);
     const symbol = thisSymbol();
     const erc20Contract = tokenContracts[symbol];
     if (!erc20Contract) {
@@ -56,6 +52,7 @@ function SwapInput({
     const decimals = await erc20Contract.decimals();
     const balance = toEth(tokenBalance, decimals);
     setBalance(balance);
+    setIsBalanceUpdating(false);
   }, [address, thisSymbol, tokenContracts]);
 
   React.useEffect(() => {
@@ -133,7 +130,7 @@ function SwapInput({
         Balance:{" "}
         {address ? (
           thisSymbol() ? (
-            isUpdating ? (
+            isBalanceUpdating ? (
               <Spinner />
             ) : (
               `${fixNum(balance, 6)} ${thisSymbol()}`
