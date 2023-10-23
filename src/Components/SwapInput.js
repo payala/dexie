@@ -10,8 +10,15 @@ import {
   setTokenContract,
 } from "../store/interactions";
 import { setMatchingSymbols, setSelectedPair } from "../store/reducers/markets";
+import Spinner from "./Spinner";
 
-function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
+function SwapInput({
+  isInput,
+  placeholder,
+  onInputChanged,
+  valueOverride,
+  isUpdating,
+}) {
   const [balance, setBalance] = React.useState(0);
   const [input, setInput] = React.useState(0);
   const pairs = useSelector((state) => state.markets.pairs);
@@ -127,11 +134,19 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
       </div>
       <div className="text-right text-gray-500 text-sm">
         Balance:{" "}
-        {address
-          ? thisSymbol()
-            ? `${fixNum(balance, 6)} ${thisSymbol()}`
-            : `Choose Token`
-          : `Connect wallet`}
+        {address ? (
+          thisSymbol() ? (
+            isUpdating ? (
+              <Spinner />
+            ) : (
+              `${fixNum(balance, 6)} ${thisSymbol()}`
+            )
+          ) : (
+            `Choose Token`
+          )
+        ) : (
+          `Connect wallet`
+        )}
       </div>
     </div>
   );
