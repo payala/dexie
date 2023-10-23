@@ -1,7 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fixNum, toEth, tokens } from "./utils_fe";
-import logo from "./logo.svg";
+import { fixNum, tokens } from "./utils_fe";
 import "./App.css";
 import SwapDetails from "./Components/SwapDetails";
 import SwapInput from "./Components/SwapInput";
@@ -19,9 +18,7 @@ import {
   setPair,
 } from "./store/interactions";
 import Navbar from "./Components/Navbar";
-import markets from "./store/reducers/markets";
 
-import Dexie from "./abis/Dexie.json";
 import {
   fullSelectedPair,
   getBestRateFromRateInfo,
@@ -40,7 +37,6 @@ function App() {
     message: "",
     type: "",
   });
-  const [rateInfo, setRateInfo] = React.useState([]);
   const [inputValue, setInputValue] = React.useState("");
   const [outputValue, setOutputValue] = React.useState("");
   const [bestRate, setBestRate] = React.useState(null);
@@ -124,7 +120,7 @@ function App() {
       const inputContract = tokenContracts[selectedPair.base];
       const outputContract = tokenContracts[selectedPair.quote];
       const minOutputValue = bestRate.amountOut * (1 - slippage / 100);
-      const result = await executeBestRateSwap(
+      await executeBestRateSwap(
         dexie,
         bestRateAt,
         dexContracts,
