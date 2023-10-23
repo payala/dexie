@@ -243,7 +243,7 @@ function App() {
 
   return (
     <>
-      <div className="flex-row bg-gray-900">
+      <div className="flex flex-col bg-gray-900 min-h-screen">
         <Navbar />
         <div>
           {banner.visible && (
@@ -255,7 +255,10 @@ function App() {
             />
           )}
         </div>
-        <div className="text-white flex items-center justify-center min-h-screen">
+        <div
+          className="text-white flex flex-col grow items-center justify-center"
+          // style={{ flexGrow: "1" }}
+        >
           <div className="bg-gray-800 p-6 rounded-lg w-80">
             <Title />
             <SwapInput
