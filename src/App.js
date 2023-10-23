@@ -76,69 +76,6 @@ function App() {
     setIsUpdating(false);
   }, [dispatch]);
 
-  React.useEffect(() => {
-    loadBlockchainData();
-  }, [loadBlockchainData]);
-
-  const showInProgress = (msg, withTimeout = false) => {
-    setBanner({
-      visible: true,
-      message: msg,
-      type: "warning",
-      withTimeout: withTimeout,
-    });
-  };
-
-  const showError = (msg, withTimeout = false) => {
-    setBanner({
-      visible: true,
-      message: msg,
-      type: "error",
-      withTimeout: withTimeout,
-    });
-  };
-
-  const showSuccess = (msg, withTimeout = false) => {
-    setBanner({
-      visible: true,
-      message: msg,
-      type: "success",
-      withTimeout: withTimeout,
-    });
-  };
-
-  const closeBanner = () => {
-    setBanner({ visible: false, message: "", type: "" });
-  };
-
-  const handleSwap = async () => {
-    setIsSwapping(true);
-    showInProgress("Swap in progress");
-    try {
-      const provider = await getProvider();
-      const signer = await provider.getSigner();
-      const inputContract = tokenContracts[selectedPair.base];
-      const outputContract = tokenContracts[selectedPair.quote];
-      const minOutputValue = bestRate.amountOut * (1 - slippage / 100);
-      await executeBestRateSwap(
-        dexie,
-        bestRateAt,
-        dexContracts,
-        inputContract,
-        outputContract,
-        inputValue,
-        minOutputValue,
-        signer
-      );
-      const tokens = Object.values(tokenContracts);
-      loadBalances(tokens, account, dispatch);
-      showSuccess("Swap completed successfully", true);
-    } catch (error) {
-      showError("Swap Failed", true);
-    }
-    setIsSwapping(false);
-  };
-
   const calculateRate = React.useCallback(
     async (fixedInput, value) => {
       if (!fullSelectedPair(selectedPair) || !value) {
@@ -221,8 +158,71 @@ function App() {
   };
 
   React.useEffect(() => {
+    loadBlockchainData();
+  }, [loadBlockchainData]);
+
+  React.useEffect(() => {
     setOutputForInput(inputValue);
   }, [inputValue, setOutputForInput]);
+
+  const showInProgress = (msg, withTimeout = false) => {
+    setBanner({
+      visible: true,
+      message: msg,
+      type: "warning",
+      withTimeout: withTimeout,
+    });
+  };
+
+  const showError = (msg, withTimeout = false) => {
+    setBanner({
+      visible: true,
+      message: msg,
+      type: "error",
+      withTimeout: withTimeout,
+    });
+  };
+
+  const showSuccess = (msg, withTimeout = false) => {
+    setBanner({
+      visible: true,
+      message: msg,
+      type: "success",
+      withTimeout: withTimeout,
+    });
+  };
+
+  const closeBanner = () => {
+    setBanner({ visible: false, message: "", type: "" });
+  };
+
+  const handleSwap = async () => {
+    setIsSwapping(true);
+    showInProgress("Swap in progress");
+    try {
+      const provider = await getProvider();
+      const signer = await provider.getSigner();
+      const inputContract = tokenContracts[selectedPair.base];
+      const outputContract = tokenContracts[selectedPair.quote];
+      const minOutputValue = bestRate.amountOut * (1 - slippage / 100);
+      await executeBestRateSwap(
+        dexie,
+        bestRateAt,
+        dexContracts,
+        inputContract,
+        outputContract,
+        inputValue,
+        minOutputValue,
+        signer
+      );
+      const tokens = Object.values(tokenContracts);
+      loadBalances(tokens, account, dispatch);
+      showSuccess("Swap completed successfully", true);
+    } catch (error) {
+      showError("Swap Failed", true);
+    }
+    setIsSwapping(false);
+  };
 
   const handleInputChanged = async (value) => {
     setInputValue(value);
