@@ -109,38 +109,37 @@ function App() {
     [dexContracts, dexie, selectedPair, tokenContracts]
   );
 
-  const setOutputForInput = React.useCallback(
-    async (inputValue) => {
-      const parsedVal = Number(inputValue);
-      if (!fullSelectedPair(selectedPair)) {
-        return;
+  const setOutputForInput = async (inputValue) => {
+    console.log(`Setting output for input ${inputValue}`);
+    const parsedVal = Number(inputValue);
+    if (!fullSelectedPair(selectedPair)) {
+      return;
+    }
+    setIsUpdating(true);
+    if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
+      if (parsedVal < 0) {
+        setInputValue(0);
       }
-      setIsUpdating(true);
-      if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
-        if (parsedVal < 0) {
-          setInputValue(0);
-        }
-        // Do a sample calculation to update the RateInfo even if no
-        // amounts are selected yet
-        const rateInfo = await calculateRate(true, 1);
-        const bestRate = getBestRateFromRateInfo(rateInfo);
-        setBestRate(bestRate);
-        storeBestRateDex(bestRate, dispatch);
-        setIsUpdating(false);
-        return;
-      }
-      const rateInfo = await calculateRate(true, parsedVal);
+      // Do a sample calculation to update the RateInfo even if no
+      // amounts are selected yet
+      const rateInfo = await calculateRate(true, 1);
       const bestRate = getBestRateFromRateInfo(rateInfo);
-      setOutputValue(bestRate.amountOut);
-      storeBestRateDex(bestRate, dispatch);
       setBestRate(bestRate);
+      storeBestRateDex(bestRate, dispatch);
       setIsUpdating(false);
-    },
-    [calculateRate, dispatch, selectedPair]
-  );
+      return;
+    }
+    const rateInfo = await calculateRate(true, parsedVal);
+    const bestRate = getBestRateFromRateInfo(rateInfo);
+    setOutputValue(fixNum(bestRate.amountOut, 8));
+    storeBestRateDex(bestRate, dispatch);
+    setBestRate(bestRate);
+    setIsUpdating(false);
+  };
 
   const setInputForOutput = async (outputValue) => {
     const parsedVal = Number(outputValue);
+    console.log(`Setting input for output ${outputValue}`);
     if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
       setInputValue(0);
       if (parsedVal < 0) {
@@ -151,7 +150,7 @@ function App() {
     setIsUpdating(true);
     const rateInfo = await calculateRate(false, parsedVal);
     const bestRate = getBestRateFromRateInfo(rateInfo);
-    setInputValue(bestRate.amountIn);
+    setInputValue(fixNum(bestRate.amountIn, 8));
     storeBestRateDex(bestRate, dispatch);
     setBestRate(bestRate);
     setIsUpdating(false);
@@ -160,10 +159,6 @@ function App() {
   React.useEffect(() => {
     loadBlockchainData();
   }, [loadBlockchainData]);
-
-  React.useEffect(() => {
-    setOutputForInput(inputValue);
-  }, [inputValue, setOutputForInput]);
 
   const showInProgress = (msg, withTimeout = false) => {
     setBanner({
@@ -273,7 +268,7 @@ function App() {
             <SwapInput
               isInput={false}
               placeholder="Output Amount"
-              valueOverride={fixNum(outputValue, 10)}
+              valueOverride={outputValue}
               onInputChanged={handleOutputChanged}
             />
             <SlippageInfo />
