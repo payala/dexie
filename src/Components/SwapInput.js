@@ -31,12 +31,12 @@ function SwapInput({
   );
   const dispatch = useDispatch();
 
-  const thisSymbol = () => {
+  const thisSymbol = React.useCallback(() => {
     if (!selectedPair) {
       return null;
     }
     return isInput ? selectedPair.base : selectedPair.quote;
-  };
+  }, [isInput, selectedPair]);
 
   const handleValueChanged = (e) => {
     setInput(e.target.value);
@@ -46,7 +46,7 @@ function SwapInput({
     } catch {}
   };
 
-  const loadBalance = async () => {
+  const loadBalance = React.useCallback(async () => {
     const symbol = thisSymbol();
     const erc20Contract = tokenContracts[symbol];
     if (!erc20Contract) {
@@ -57,14 +57,14 @@ function SwapInput({
     const decimals = await erc20Contract.decimals();
     const balance = toEth(tokenBalance, decimals);
     setBalance(balance);
-  };
+  }, [address, thisSymbol, tokenContracts]);
 
   React.useEffect(() => {
     // Load balance if a pair is selected
     if (address !== null) {
       loadBalance();
     }
-  }, [selectedPair, tokenContracts, balances, address]);
+  }, [loadBalance, address]);
 
   const handleTokenSelect = async (selectedOption, field) => {
     console.log(`Selected ${selectedOption.value} for ${field}`);

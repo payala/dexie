@@ -77,7 +77,6 @@ function App() {
   }, [dispatch]);
 
   React.useEffect(() => {
-    console.log("Loading blockchain data");
     loadBlockchainData();
   }, [loadBlockchainData]);
 
