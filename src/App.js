@@ -140,62 +140,68 @@ function App() {
     setIsSwapping(false);
   };
 
-  const calculateRate = async (fixedInput, value) => {
-    if (!fullSelectedPair(selectedPair) || !value) {
-      return;
-    }
-    const inputContract = tokenContracts[selectedPair.base];
-    const outputContract = tokenContracts[selectedPair.quote];
-
-    if (fixedInput) {
-      const decimals = await inputContract.decimals();
-      const inputVal = tokens(value, decimals);
-      return getRateInfoFixedInput(
-        inputContract,
-        outputContract,
-        inputVal,
-        dexContracts,
-        dexie
-      );
-    } else {
-      const decimals = await outputContract.decimals();
-      const outputVal = tokens(value, decimals);
-      return getRateInfoFixedOutput(
-        inputContract,
-        outputContract,
-        outputVal,
-        dexContracts,
-        dexie
-      );
-    }
-  };
-
-  const setOutputForInput = async (inputValue) => {
-    const parsedVal = Number(inputValue);
-    if (!fullSelectedPair(selectedPair)) {
-      return;
-    }
-    setIsUpdating(true);
-    if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
-      if (parsedVal < 0) {
-        setInputValue(0);
+  const calculateRate = React.useCallback(
+    async (fixedInput, value) => {
+      if (!fullSelectedPair(selectedPair) || !value) {
+        return;
       }
-      // Do a sample calculation to update the RateInfo even if no
-      // amounts are selected yet
-      const rateInfo = await calculateRate(true, 1);
+      const inputContract = tokenContracts[selectedPair.base];
+      const outputContract = tokenContracts[selectedPair.quote];
+
+      if (fixedInput) {
+        const decimals = await inputContract.decimals();
+        const inputVal = tokens(value, decimals);
+        return getRateInfoFixedInput(
+          inputContract,
+          outputContract,
+          inputVal,
+          dexContracts,
+          dexie
+        );
+      } else {
+        const decimals = await outputContract.decimals();
+        const outputVal = tokens(value, decimals);
+        return getRateInfoFixedOutput(
+          inputContract,
+          outputContract,
+          outputVal,
+          dexContracts,
+          dexie
+        );
+      }
+    },
+    [dexContracts, dexie, selectedPair, tokenContracts]
+  );
+
+  const setOutputForInput = React.useCallback(
+    async (inputValue) => {
+      const parsedVal = Number(inputValue);
+      if (!fullSelectedPair(selectedPair)) {
+        return;
+      }
+      setIsUpdating(true);
+      if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
+        if (parsedVal < 0) {
+          setInputValue(0);
+        }
+        // Do a sample calculation to update the RateInfo even if no
+        // amounts are selected yet
+        const rateInfo = await calculateRate(true, 1);
+        const bestRate = getBestRateFromRateInfo(rateInfo);
+        setBestRate(bestRate);
+        storeBestRateDex(bestRate, dispatch);
+        setIsUpdating(false);
+        return;
+      }
+      const rateInfo = await calculateRate(true, parsedVal);
       const bestRate = getBestRateFromRateInfo(rateInfo);
-      setBestRate(bestRate);
+      setOutputValue(bestRate.amountOut);
       storeBestRateDex(bestRate, dispatch);
+      setBestRate(bestRate);
       setIsUpdating(false);
-      return;
-    }
-    const rateInfo = await calculateRate(true, parsedVal);
-    const bestRate = getBestRateFromRateInfo(rateInfo);
-    setOutputValue(bestRate.amountOut);
-    storeBestRateDex(bestRate, dispatch);
-    setBestRate(bestRate);
-    setIsUpdating(false);
-  };
+    },
+    [calculateRate, dispatch, selectedPair]
+  );
 
   const setInputForOutput = async (outputValue) => {
     const parsedVal = Number(outputValue);
@@ -217,7 +223,7 @@ function App() {
 
   React.useEffect(() => {
     setOutputForInput(inputValue);
-  }, [selectedPair]);
+  }, [inputValue, setOutputForInput]);
 
   const handleInputChanged = async (value) => {
     setInputValue(value);
