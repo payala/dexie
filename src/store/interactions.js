@@ -5,7 +5,7 @@ import {
   setTokenContracts,
   setTokenData,
 } from "./reducers/tokens";
-import { toEth, tokens } from "../utils_fe";
+import { fixNum, toEth, tokens } from "../utils_fe";
 
 import config from "../config.json";
 import {
@@ -308,8 +308,14 @@ export const executeBestRateSwap = async (
   const bestDex = dexContracts.find((dex) => dex.name === bestRateAt);
   const inputDecimals = await inputTokenContract.decimals();
   const outputDecimals = await outputTokenContract.decimals();
-  const inputAmountWei = tokens(inputAmount, inputDecimals);
-  const minOutputAmountWei = tokens(minOutputAmount, outputDecimals);
+  const inputAmountWei = tokens(
+    fixNum(inputAmount, inputDecimals),
+    inputDecimals
+  );
+  const minOutputAmountWei = tokens(
+    fixNum(minOutputAmount, outputDecimals),
+    outputDecimals
+  );
   // Approve sending tokens
   const approveTx = await inputTokenContract.approve(dexie, inputAmountWei);
   await approveTx.wait();
