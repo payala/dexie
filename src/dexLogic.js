@@ -1,4 +1,18 @@
 import { toEth } from "./utils_fe";
+import { DexieError } from "./errors";
+
+const processError = (error, dispatch) => {
+  // Processes error messages from smart contract calls and creates
+  // a human-understandable message to be shown to the user
+  let msg;
+  if (error.reason === "ds-math-sub-underflow") {
+    // Probably the amount is too large
+    msg = "Amount too large";
+  } else {
+    msg = `Unknown error: ${error}`;
+  }
+  throw new DexieError(msg);
+};
 
 const getRateInfo = async (
   fixedInput,
@@ -12,7 +26,7 @@ const getRateInfo = async (
 
   let amountIn = fixedInput ? amount : 0;
   let amountOut = fixedInput ? 0 : amount;
-
+  let storedError = {};
   const rates = await Promise.all(
     dexContracts.map(async (dex) => {
       if (fixedInput) {
@@ -21,7 +35,7 @@ const getRateInfo = async (
             await dexie.getAmountsOut(dex.router.target, amountIn, path)
           )[1];
         } catch (error) {
-          console.debug(`Error fetching pair in ${dex.name}`);
+          storedError[dex.name] = error;
           return;
         }
       } else {
@@ -30,7 +44,7 @@ const getRateInfo = async (
             await dexie.getAmountsIn(dex.router.target, amountOut, path)
           )[0];
         } catch (error) {
-          console.debug(`Error fetching pair in ${dex.name}`);
+          storedError[dex.name] = error;
           return;
         }
       }
@@ -53,6 +67,16 @@ const getRateInfo = async (
       };
     })
   );
+
+  // If there were errors to the point where there is no available rate,
+  // show the first one to the user
+  if (rates.every((item) => item === undefined) && storedError) {
+    processError(Object.values(storedError)[0]);
+    for (const dex of Object.keys(storedError)) {
+      console.log(`Error fetching pair in ${dex}: ${storedError[dex]}`);
+    }
+    return;
+  }
   const validRates = rates.filter((rate) => rate != null);
   return validRates;
 };

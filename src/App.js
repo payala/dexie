@@ -30,6 +30,8 @@ import SwapArrow from "./Components/SwapArrow";
 import SlippageInfo from "./Components/SlippageInfo";
 import RateInfo from "./Components/RateInfo";
 import Spinner from "./Components/Spinner";
+import { clearError } from "./store/reducers/errors";
+import { callAndShowErrors } from "./errors";
 
 function App() {
   const [banner, setBanner] = React.useState({
@@ -50,6 +52,7 @@ function App() {
   const dexie = useSelector((state) => state.dexie.contract);
   const bestRateAt = useSelector((state) => state.markets.bestRateAt);
   const slippage = useSelector((state) => state.dexie.slippage);
+  const error = useSelector((state) => state.errors.message);
 
   const dispatch = useDispatch();
 
@@ -191,6 +194,13 @@ function App() {
     setBanner({ visible: false, message: "", type: "" });
   };
 
+  React.useEffect(() => {
+    if (error) {
+      showError(error, true);
+      dispatch(clearError());
+    }
+  }, [banner.message, banner.visible, dispatch, error]);
+
   const handleSwap = async () => {
     setIsSwapping(true);
     showInProgress("Swap in progress");
@@ -221,12 +231,12 @@ function App() {
 
   const handleInputChanged = async (value) => {
     setInputValue(value);
-    setOutputForInput(value);
+    callAndShowErrors(async () => await setOutputForInput(value), dispatch);
   };
 
   const handleOutputChanged = async (value) => {
     setOutputValue(value);
-    setInputForOutput(value);
+    callAndShowErrors(async () => await setInputForOutput(value), dispatch);
   };
 
   const swapTokens = () => {
