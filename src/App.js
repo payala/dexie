@@ -32,6 +32,10 @@ import RateInfo from "./Components/RateInfo";
 import Spinner from "./Components/Spinner";
 import { clearError } from "./store/reducers/errors";
 import { callAndShowErrors } from "./errors";
+import NetworkModal from "./Components/NetworkModal";
+import config from "./config.json";
+
+const supportedChains = Object.keys(config).map((dec) => Number(dec));
 
 function App() {
   const [banner, setBanner] = React.useState({
@@ -44,6 +48,7 @@ function App() {
   const [bestRate, setBestRate] = React.useState(null);
   const [isSwapping, setIsSwapping] = React.useState(false);
   const [isUpdating, setIsUpdating] = React.useState(false);
+  const [networkSupported, setNetworkSupported] = React.useState(false);
 
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const account = useSelector((state) => state.provider.account);
@@ -72,6 +77,11 @@ function App() {
       await loadAccount(dispatch);
     });
 
+    if (!supportedChains.includes(Number(chainId))) {
+      return;
+    }
+
+    setNetworkSupported(true);
     // Initiate contracts
     await loadDexes(provider, chainId, dispatch);
     await loadMarkets(provider, dispatch);
@@ -304,6 +314,7 @@ function App() {
             </button>
           </div>
           <SwapDetails />
+          <NetworkModal isOpen={!networkSupported} />
         </div>
       </div>
     </>
