@@ -221,45 +221,6 @@ export const setTokenContract = async (
   dispatch(setTokenContracts(tokenContracts));
 };
 
-export const setPair = async (pair, tokenData, dispatch) => {
-  if (!pair.pairAddress) {
-    // If only base or quote tokens are selected, just store it
-    dispatch(setSelectedPair(pair));
-    return;
-  }
-
-  // If a pair has been chosen, get the pair and token contracts
-  const provider = getProvider();
-  const signer = await provider.getSigner();
-  // Get token contract data from 1Inch, because it's more reliable than Uniswap
-  // pair contracts. Use the pair only to get the tokens.
-  const baseTokenAddress = tokenData[pair.base].address;
-  const quoteTokenAddress = tokenData[pair.quote].address;
-
-  const baseTokenContract = new ethers.Contract(
-    baseTokenAddress,
-    IERC20.abi,
-    signer
-  );
-  const quoteTokenContract = new ethers.Contract(
-    quoteTokenAddress,
-    IERC20.abi,
-    signer
-  );
-
-  // assign by symbols base and quote with their corresponding contract
-  const tokenContracts = {
-    [pair.base]: baseTokenContract,
-    [pair.quote]: quoteTokenContract,
-  };
-  dispatch(setTokenContracts(tokenContracts));
-  dispatch(setSelectedPair(pair));
-};
-
-export const storeBestRateDex = (bestRate, dispatch) => {
-  console.log(`storeBestRate: ${bestRate.name}`);
-  dispatch(setBestRateAt(bestRate.name));
-};
 // --------------------------------------------------------------------------------------
 // LOAD CONTRACTS
 export const loadDexie = async (provider, chainId, dispatch) => {
@@ -331,3 +292,51 @@ export const executeBestRateSwap = async (
   const result = await tx.wait();
   return result;
 };
+
+//------------------------------------------------------------------------
+// Application data
+
+export const setPair = async (pair, tokenData, dispatch) => {
+  if (!pair.pairAddress) {
+    // If only base or quote tokens are selected, just store it
+    dispatch(setSelectedPair(pair));
+    return;
+  }
+
+  // If a pair has been chosen, get the pair and token contracts
+  const provider = getProvider();
+  const signer = await provider.getSigner();
+  // Get token contract data from 1Inch, because it's more reliable than Uniswap
+  // pair contracts. Use the pair only to get the tokens.
+  const baseTokenAddress = tokenData[pair.base].address;
+  const quoteTokenAddress = tokenData[pair.quote].address;
+
+  const baseTokenContract = new ethers.Contract(
+    baseTokenAddress,
+    IERC20.abi,
+    signer
+  );
+  const quoteTokenContract = new ethers.Contract(
+    quoteTokenAddress,
+    IERC20.abi,
+    signer
+  );
+
+  // assign by symbols base and quote with their corresponding contract
+  const tokenContracts = {
+    [pair.base]: baseTokenContract,
+    [pair.quote]: quoteTokenContract,
+  };
+  dispatch(setTokenContracts(tokenContracts));
+  dispatch(setSelectedPair(pair));
+};
+
+export const storeBestRate = (bestRate, dispatch) => {
+  dispatch(setBestRate(bestRate));
+};
+
+export const storeSwapData = (swapData, dispatch) => {
+  dispatch(setSwapData(swapData));
+};
+
+export const storeInputSymbol = (inputSymbol, swapData, dispatch) => {};

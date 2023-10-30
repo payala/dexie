@@ -28,6 +28,7 @@ import SwapData from "./Components/SwapData";
 const supportedChains = Object.keys(config).map((dec) => Number(dec));
 
 function App() {
+  const [inputValue, setInputValue] = React.useState(null); // TODO: REMOVE
   const [banner, setBanner] = React.useState({
     visible: false,
     message: "",
@@ -166,7 +167,11 @@ function App() {
         >
           <div className="bg-gray-800 p-6 rounded-lg w-80">
             <Title />
-            <SwapData isUpdating={isUpdating} setIsUpdating={setIsUpdating} />
+            <SwapData
+              isUpdating={isUpdating}
+              setIsUpdating={setIsUpdating}
+              setInputValueUpstream={setInputValue}
+            />
             <SlippageInfo />
             <RateInfo>
               {bestRate

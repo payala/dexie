@@ -13,8 +13,8 @@ import { callAndShowErrors } from "../errors";
 import SwapInput from "./SwapInput";
 import SwapArrow from "./SwapArrow";
 
-function SwapData({ isUpdating, setIsUpdating }) {
-  const [inputValue, setInputValue] = React.useState("");
+function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
+  const [inputValue, setInputValueState] = React.useState("");
   const [outputValue, setOutputValue] = React.useState("");
 
   const account = useSelector((state) => state.provider.account);
@@ -24,6 +24,12 @@ function SwapData({ isUpdating, setIsUpdating }) {
   const dexie = useSelector((state) => state.dexie.contract);
 
   const dispatch = useDispatch();
+
+  // TODO: REMOVE UPSTREAM
+  const setInputValue = (value) => {
+    setInputValueState(value);
+    setInputValueUpstream(value);
+  };
 
   const calculateRate = React.useCallback(
     async (fixedInput, value) => {
