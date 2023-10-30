@@ -8,15 +8,14 @@ import {
 import { fixNum, toEth, tokens } from "../utils_fe";
 
 import config from "../config.json";
+import { setPairs, setSymbols, setDexContracts } from "./reducers/markets";
+
 import {
-  setPairs,
-  setSymbols,
-  setDexContracts,
   setSelectedSymbol,
   setMatchingSymbols,
   setSelectedPair,
   setBestRate,
-} from "./reducers/markets";
+} from "./reducers/dexie";
 
 import IUniswapV2FactoryABI from "@uniswap/v2-core/build/IUniswapV2Factory.json";
 import IUniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";

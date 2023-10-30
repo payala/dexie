@@ -42,9 +42,9 @@ function App() {
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const account = useSelector((state) => state.provider.account);
   const tokenContracts = useSelector((state) => state.tokens.contracts);
-  const selectedPair = useSelector((state) => state.markets.selectedPair);
+  const selectedPair = useSelector((state) => state.dexie.selectedPair);
   const dexie = useSelector((state) => state.dexie.contract);
-  const bestRate = useSelector((state) => state.markets.bestRate);
+  const bestRate = useSelector((state) => state.dexie.bestRate);
   const slippage = useSelector((state) => state.dexie.slippage);
   const error = useSelector((state) => state.errors.message);
 

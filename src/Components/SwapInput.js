@@ -16,7 +16,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
   const [isBalanceUpdating, setIsBalanceUpdating] = React.useState(false);
   const pairs = useSelector((state) => state.markets.pairs);
   const tokenContracts = useSelector((state) => state.tokens.contracts);
-  const selectedPair = useSelector((state) => state.markets.selectedPair);
+  const selectedPair = useSelector((state) => state.dexie.selectedPair);
   const address = useSelector((state) => state.provider.account);
   const tokenData = useSelector((state) => state.tokens.tokenData);
 

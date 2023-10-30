@@ -19,7 +19,7 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
 
   const account = useSelector((state) => state.provider.account);
   const tokenContracts = useSelector((state) => state.tokens.contracts);
-  const selectedPair = useSelector((state) => state.markets.selectedPair);
+  const selectedPair = useSelector((state) => state.dexie.selectedPair);
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const dexie = useSelector((state) => state.dexie.contract);
 

@@ -41,7 +41,7 @@ function SearchableDropdown({
   value,
 }) {
   const symbols = useSelector((state) => state.markets.symbols);
-  const matchingSymbols = useSelector((state) => state.markets.matchingSymbols);
+  const matchingSymbols = useSelector((state) => state.dexie.matchingSymbols);
   const [filteredOptions, setFilteredOptions] = React.useState([]);
   const [inputValue, setInputValue] = React.useState("");
 
