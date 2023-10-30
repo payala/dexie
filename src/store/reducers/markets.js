@@ -10,7 +10,7 @@ export const markets = createSlice({
     matchingSymbols: [], // Stores symbols that would have a pair with selectedSymbol
     selectedPair: null, // Stores the pair info once two symbols are selected
     selectedPairContract: null, // Stores the contract for the selected pair
-    bestRateAt: null, // Stores the best rate found for swapping
+    bestRate: null, // Stores the best rate found for swapping
   },
   reducers: {
     setPairs: (state, action) => {
@@ -34,8 +34,7 @@ export const markets = createSlice({
     setSelectedPairContract: (state, action) => {
       state.selectedPairContract = action.payload;
     },
-    setBestRateAt: (state, action) => {
-      console.log(`setting best rate to ${action.payload}`);
+    setBestRate: (state, action) => {
       state.bestRateAt = action.payload;
     },
   },
@@ -49,7 +48,7 @@ export const {
   setMatchingSymbols,
   setSelectedPair,
   setSelectedPairContract,
-  setBestRateAt,
+  setBestRate,
 } = markets.actions;
 
 export default markets.reducer;

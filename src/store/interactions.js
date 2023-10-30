@@ -15,7 +15,7 @@ import {
   setSelectedSymbol,
   setMatchingSymbols,
   setSelectedPair,
-  setBestRateAt,
+  setBestRate,
 } from "./reducers/markets";
 
 import IUniswapV2FactoryABI from "@uniswap/v2-core/build/IUniswapV2Factory.json";
@@ -333,10 +333,6 @@ export const setPair = async (pair, tokenData, dispatch) => {
 
 export const storeBestRate = (bestRate, dispatch) => {
   dispatch(setBestRate(bestRate));
-};
-
-export const storeSwapData = (swapData, dispatch) => {
-  dispatch(setSwapData(swapData));
 };
 
 export const storeInputSymbol = (inputSymbol, swapData, dispatch) => {};
