@@ -14,7 +14,7 @@ const processError = (error, dispatch) => {
   throw new DexieError(msg);
 };
 
-const getRateInfo = async (
+export const getRateInfo = async (
   fixedInput,
   inputTokenContract,
   outputTokenContract,

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { fixNum, tokens } from "./utils_fe";
 import "./App.css";
 import SwapDetails from "./Components/SwapDetails";
-import SwapInput from "./Components/SwapInput";
 import MessageBanner from "./Components/MessageBanner";
 import {
   loadAccount,
@@ -12,28 +11,19 @@ import {
   loadNetwork,
   getProvider,
   loadDexie,
-  storeBestRateDex,
   executeBestRateSwap,
   loadBalances,
-  setPair,
 } from "./store/interactions";
 import Navbar from "./Components/Navbar";
 
-import {
-  fullSelectedPair,
-  getBestRateFromRateInfo,
-  getRateInfoFixedInput,
-  getRateInfoFixedOutput,
-} from "./dexLogic";
 import Title from "./Components/Title";
-import SwapArrow from "./Components/SwapArrow";
 import SlippageInfo from "./Components/SlippageInfo";
 import RateInfo from "./Components/RateInfo";
 import Spinner from "./Components/Spinner";
 import { clearError } from "./store/reducers/errors";
-import { callAndShowErrors } from "./errors";
 import NetworkModal from "./Components/NetworkModal";
 import config from "./config.json";
+import SwapData from "./Components/SwapData";
 
 const supportedChains = Object.keys(config).map((dec) => Number(dec));
 
@@ -43,9 +33,7 @@ function App() {
     message: "",
     type: "",
   });
-  const [inputValue, setInputValue] = React.useState("");
-  const [outputValue, setOutputValue] = React.useState("");
-  const [bestRate, setBestRate] = React.useState(null);
+
   const [isSwapping, setIsSwapping] = React.useState(false);
   const [isUpdating, setIsUpdating] = React.useState(false);
   const [networkSupported, setNetworkSupported] = React.useState(false);
@@ -55,7 +43,7 @@ function App() {
   const tokenContracts = useSelector((state) => state.tokens.contracts);
   const selectedPair = useSelector((state) => state.markets.selectedPair);
   const dexie = useSelector((state) => state.dexie.contract);
-  const bestRateAt = useSelector((state) => state.markets.bestRateAt);
+  const bestRate = useSelector((state) => state.markets.bestRate);
   const slippage = useSelector((state) => state.dexie.slippage);
   const error = useSelector((state) => state.errors.message);
 
@@ -71,7 +59,6 @@ function App() {
     window.ethereum.on("chainChanged", () => {
       window.location.reload();
     });
-
     // Fetch current account from Metamask when changed
     window.ethereum.on("accountsChanged", async () => {
       await loadAccount(dispatch);
@@ -88,86 +75,6 @@ function App() {
     await loadDexie(provider, chainId, dispatch);
     setIsUpdating(false);
   }, [dispatch]);
-
-  const calculateRate = React.useCallback(
-    async (fixedInput, value) => {
-      if (!fullSelectedPair(selectedPair) || !value) {
-        return;
-      }
-      const inputContract = tokenContracts[selectedPair.base];
-      const outputContract = tokenContracts[selectedPair.quote];
-
-      if (fixedInput) {
-        const decimals = await inputContract.decimals();
-        const inputVal = tokens(value, decimals);
-        return getRateInfoFixedInput(
-          inputContract,
-          outputContract,
-          inputVal,
-          dexContracts,
-          dexie
-        );
-      } else {
-        const decimals = await outputContract.decimals();
-        const outputVal = tokens(value, decimals);
-        return getRateInfoFixedOutput(
-          inputContract,
-          outputContract,
-          outputVal,
-          dexContracts,
-          dexie
-        );
-      }
-    },
-    [dexContracts, dexie, selectedPair, tokenContracts]
-  );
-
-  const setOutputForInput = async (inputValue) => {
-    console.log(`Setting output for input ${inputValue}`);
-    const parsedVal = Number(inputValue);
-    if (!fullSelectedPair(selectedPair)) {
-      return;
-    }
-    setIsUpdating(true);
-    if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
-      if (parsedVal < 0) {
-        setInputValue(0);
-      }
-      // Do a sample calculation to update the RateInfo even if no
-      // amounts are selected yet
-      const rateInfo = await calculateRate(true, 1);
-      const bestRate = getBestRateFromRateInfo(rateInfo);
-      setBestRate(bestRate);
-      storeBestRateDex(bestRate, dispatch);
-      setIsUpdating(false);
-      return;
-    }
-    const rateInfo = await calculateRate(true, parsedVal);
-    const bestRate = getBestRateFromRateInfo(rateInfo);
-    setOutputValue(fixNum(bestRate.amountOut, 8));
-    storeBestRateDex(bestRate, dispatch);
-    setBestRate(bestRate);
-    setIsUpdating(false);
-  };
-
-  const setInputForOutput = async (outputValue) => {
-    const parsedVal = Number(outputValue);
-    console.log(`Setting input for output ${outputValue}`);
-    if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
-      setInputValue(0);
-      if (parsedVal < 0) {
-        setOutputValue(0);
-      }
-      return;
-    }
-    setIsUpdating(true);
-    const rateInfo = await calculateRate(false, parsedVal);
-    const bestRate = getBestRateFromRateInfo(rateInfo);
-    setInputValue(fixNum(bestRate.amountIn, 8));
-    storeBestRateDex(bestRate, dispatch);
-    setBestRate(bestRate);
-    setIsUpdating(false);
-  };
 
   React.useEffect(() => {
     loadBlockchainData();
@@ -222,7 +129,7 @@ function App() {
       const minOutputValue = bestRate.amountOut * (1 - slippage / 100);
       await executeBestRateSwap(
         dexie,
-        bestRateAt,
+        bestRate.name,
         dexContracts,
         inputContract,
         outputContract,
@@ -237,25 +144,6 @@ function App() {
       showError("Swap Failed", true);
     }
     setIsSwapping(false);
-  };
-
-  const handleInputChanged = async (value) => {
-    setInputValue(value);
-    callAndShowErrors(async () => await setOutputForInput(value), dispatch);
-  };
-
-  const handleOutputChanged = async (value) => {
-    setOutputValue(value);
-    callAndShowErrors(async () => await setInputForOutput(value), dispatch);
-  };
-
-  const swapTokens = () => {
-    const newSelectedPair = {
-      ...selectedPair,
-      quote: selectedPair.base,
-      base: selectedPair.quote,
-    };
-    setPair(newSelectedPair, dispatch);
   };
 
   return (
@@ -278,19 +166,7 @@ function App() {
         >
           <div className="bg-gray-800 p-6 rounded-lg w-80">
             <Title />
-            <SwapInput
-              isInput={true}
-              placeholder="Input Amount"
-              valueOverride={inputValue}
-              onInputChanged={handleInputChanged}
-            />
-            <SwapArrow onClick={swapTokens} />
-            <SwapInput
-              isInput={false}
-              placeholder="Output Amount"
-              valueOverride={outputValue}
-              onInputChanged={handleOutputChanged}
-            />
+            <SwapData isUpdating={isUpdating} setIsUpdating={setIsUpdating} />
             <SlippageInfo />
             <RateInfo>
               {bestRate
@@ -301,7 +177,7 @@ function App() {
                     isUpdating ? <Spinner /> : fixNum(bestRate.rate, 6),
                     ` ${selectedPair.quote}`,
                     <br />,
-                    `(Best rate at ${bestRateAt})`,
+                    `(Best rate at ${bestRate.name})`,
                   ]
                 : `Select two tokens to see the rate`}
             </RateInfo>
