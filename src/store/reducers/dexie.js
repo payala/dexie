@@ -5,8 +5,10 @@ export const dexie = createSlice({
   initialState: {
     contract: [],
     slippage: 0.5,
-    selectedSymbol: null, // Stores the first selected symbol
-    matchingSymbols: [], // Stores symbols that would have a pair with selectedSymbol
+    inputSymbol: null, // Stores the selected input symbol
+    outputSymbol: null, // Stores the selected output symbol
+    outputMatchingSymbols: [], // Stores symbols that would have a pair with inputSymbol
+    inputMatchingSymbols: [], // Stores symbols that would have a pair with outputSymbol
     selectedPair: null, // Stores the pair info once two symbols are selected
     selectedPairContract: null, // Stores the contract for the selected pair
     bestRate: null, // Stores the best rate found for swapping
@@ -18,11 +20,14 @@ export const dexie = createSlice({
     setSlippage: (state, action) => {
       state.slippage = action.payload;
     },
-    setSelectedSymbol: (state, action) => {
-      state.selectedSymbol = action.payload;
+    setInputSymbol: (state, action) => {
+      state.inputSymbol = action.payload;
     },
-    setMatchingSymbols: (state, action) => {
-      state.matchingSymbols = action.payload;
+    setOutputMatchingSymbols: (state, action) => {
+      state.outputMatchingSymbols = action.payload;
+    },
+    setInputMatchingSymbols: (state, action) => {
+      state.inputMatchingSymbols = action.payload;
     },
     setSelectedPair: (state, action) => {
       state.selectedPair = action.payload;
@@ -39,8 +44,9 @@ export const dexie = createSlice({
 export const {
   setContract,
   setSlippage,
-  setSelectedSymbol,
-  setMatchingSymbols,
+  setInputSymbol,
+  setOutputMatchingSymbols,
+  setInputMatchingSymbols,
   setSelectedPair,
   setSelectedPairContract,
   setBestRate,

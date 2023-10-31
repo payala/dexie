@@ -7,8 +7,17 @@ import {
   getBestRateFromRateInfo,
   getRateInfo,
 } from "../dexLogic";
-import { storeBestRate, setPair } from "../store/interactions";
 import { callAndShowErrors } from "../errors";
+import {
+  storeBestRate,
+  selectFirstToken,
+  selectOutputMatchingSymbols,
+  selectInputMatchingSymbols,
+  setPair,
+  setTokenContract,
+  findMatchingSymbols,
+  findMatchingPairs,
+} from "../store/interactions";
 
 import SwapInput from "./SwapInput";
 import SwapArrow from "./SwapArrow";
@@ -16,12 +25,17 @@ import SwapArrow from "./SwapArrow";
 function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
   const [inputValue, setInputValueState] = React.useState("");
   const [outputValue, setOutputValue] = React.useState("");
+  const [inputToken, setInputToken] = React.useState("");
+  const [outputToken, setOutputToken] = React.useState("");
+  const [inputMatchingSymbols, setInputMatchingSymbols] = React.useState([]);
+  const [outputMatchingSymbols, setOutputMatchingSymbols] = React.useState([]);
 
-  const account = useSelector((state) => state.provider.account);
   const tokenContracts = useSelector((state) => state.tokens.contracts);
   const selectedPair = useSelector((state) => state.dexie.selectedPair);
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const dexie = useSelector((state) => state.dexie.contract);
+  const pairs = useSelector((state) => state.markets.pairs);
+  const tokenData = useSelector((state) => state.tokens.tokenData);
 
   const dispatch = useDispatch();
 
@@ -33,16 +47,16 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
 
   const calculateRate = React.useCallback(
     async (fixedInput, value) => {
-      if (!fullSelectedPair(selectedPair) || !value) {
+      if ((!inputToken && !outputToken) || !value) {
         return;
       }
-      const inputContract = tokenContracts[selectedPair.base];
-      const outputContract = tokenContracts[selectedPair.quote];
-      const setValue = tokens(value, decimals);
+      const inputContract = tokenContracts[inputToken];
+      const outputContract = tokenContracts[outputToken];
       let decimals = await outputContract.decimals();
       if (fixedInput) {
         decimals = await inputContract.decimals();
       }
+      const setValue = tokens(value, decimals);
       return getRateInfo(
         fixedInput,
         inputContract,
@@ -52,49 +66,38 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
         dexie
       );
     },
-    [dexContracts, dexie, selectedPair, tokenContracts]
+    [dexContracts, dexie, inputToken, outputToken, tokenContracts]
   );
 
-  const setOutputForInput = async (inputValue) => {
+  const onAmountChanged = async (newAmount, isInput) => {
     let invalidInput = false;
-    const parsedVal = Number(inputValue);
-    if (!fullSelectedPair(selectedPair)) {
-      return;
-    }
-    setIsUpdating(true);
+    const parsedVal = Number(newAmount);
     if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
       if (parsedVal < 0) {
-        setInputValue(0);
+        isInput ? setInputValue(0) : setOutputValue(0);
       }
       invalidInput = true;
     }
     // If the input is invalid, do a sample calculation to update the RateInfo
     // even if no amounts are selected yet
-    const rateInfo = await calculateRate(true, invalidInput ? 1 : parsedVal);
+    setIsUpdating(true);
+    const rateInfo = await calculateRate(isInput, invalidInput ? 1 : parsedVal);
     const bestRate = getBestRateFromRateInfo(rateInfo);
-    storeBestRate(bestRate);
+    storeBestRate(bestRate, dispatch);
     if (!invalidInput) {
-      setOutputValue(fixNum(bestRate.amountOut, 8));
+      isInput
+        ? setOutputValue(fixNum(bestRate.amountOut, 8))
+        : setInputValue(fixNum(bestRate.amountIn, 8));
     }
     setIsUpdating(false);
   };
 
+  const setOutputForInput = async (inputValue) => {
+    onAmountChanged(inputValue, true);
+  };
+
   const setInputForOutput = async (outputValue) => {
-    const parsedVal = Number(outputValue);
-    console.log(`Setting input for output ${outputValue}`);
-    if (!Number.isFinite(parsedVal) || parsedVal <= 0) {
-      setInputValue(0);
-      if (parsedVal < 0) {
-        setOutputValue(0);
-      }
-      return;
-    }
-    setIsUpdating(true);
-    const rateInfo = await calculateRate(false, parsedVal);
-    const bestRate = getBestRateFromRateInfo(rateInfo);
-    setInputValue(fixNum(bestRate.amountIn, 8));
-    storeBestRate(bestRate);
-    setIsUpdating(false);
+    onAmountChanged(outputValue, false);
   };
 
   const handleInputChanged = async (value) => {
@@ -107,13 +110,25 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
     callAndShowErrors(async () => await setInputForOutput(value), dispatch);
   };
 
+  const handleInputTokenChanged = async (val) => {
+    // Prepare the list of possible tokens for the output field
+    setInputToken(val);
+    setOutputMatchingSymbols(findMatchingSymbols(val, pairs));
+    setTokenContract(val, pairs, tokenContracts, dispatch);
+  };
+
+  const handleOutputTokenChanged = async (val) => {
+    // Choose the pair that would allow swapping the selected tokens
+    setOutputToken(val);
+    setInputMatchingSymbols(findMatchingSymbols(val, pairs));
+    setTokenContract(val, pairs, tokenContracts, dispatch);
+  };
+
   const swapTokens = () => {
-    const newSelectedPair = {
-      ...selectedPair,
-      quote: selectedPair.base,
-      base: selectedPair.quote,
-    };
-    setPair(newSelectedPair, dispatch);
+    setInputToken(outputToken);
+    setOutputToken(inputToken);
+    setInputValue(outputValue);
+    setOutputValue(inputValue);
   };
 
   return (
@@ -121,15 +136,21 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
       <SwapInput
         isInput={true}
         placeholder="Input Amount"
-        valueOverride={inputValue}
-        onInputChanged={handleInputChanged}
+        amount={inputValue}
+        symbol={inputToken}
+        onAmountChanged={handleInputChanged}
+        onTokenChanged={handleInputTokenChanged}
+        matchingSymbols={inputMatchingSymbols}
       />
       <SwapArrow onClick={swapTokens} />
       <SwapInput
         isInput={false}
         placeholder="Output Amount"
-        valueOverride={outputValue}
-        onInputChanged={handleOutputChanged}
+        amount={outputValue}
+        symbol={outputToken}
+        onAmountChanged={handleOutputChanged}
+        onTokenChanged={handleOutputTokenChanged}
+        matchingSymbols={outputMatchingSymbols}
       />
     </>
   );

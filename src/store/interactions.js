@@ -11,8 +11,9 @@ import config from "../config.json";
 import { setPairs, setSymbols, setDexContracts } from "./reducers/markets";
 
 import {
-  setSelectedSymbol,
-  setMatchingSymbols,
+  setInputSymbol,
+  setOutputMatchingSymbols,
+  setInputMatchingSymbols,
   setSelectedPair,
   setBestRate,
 } from "./reducers/dexie";
@@ -182,11 +183,37 @@ export const loadMarkets = async (provider, dispatch) => {
 };
 
 export const selectFirstToken = (symbol, dispatch) => {
-  dispatch(setSelectedSymbol(symbol));
+  dispatch(setInputSymbol(symbol));
 };
 
-export const selectMatchingSymbols = (symbols, dispatch) => {
-  dispatch(setMatchingSymbols(symbols));
+export const selectOutputMatchingSymbols = (symbols, dispatch) => {
+  dispatch(setOutputMatchingSymbols(symbols));
+};
+
+export const selectInputMatchingSymbols = (symbols, dispatch) => {
+  dispatch(setInputMatchingSymbols(symbols));
+};
+
+export const findMatchingSymbols = (symbol, pairs) => {
+  // Returns a list of symbols that have a pair with symbol
+  const relevantPairs = pairs.filter(
+    (pair) => pair.base === symbol || pair.quote === symbol
+  );
+  const matchingSymbols = relevantPairs.map((pair) =>
+    pair.quote === symbol ? pair.base : pair.quote
+  );
+
+  return matchingSymbols;
+};
+
+export const findMatchingPairs = (inputSymbol, outputSymbol, pairs) => {
+  // Returns a list of pairs that include both symbols
+  const relevantPairs = pairs.filter(
+    (pair) =>
+      (pair.quote === inputSymbol && pair.base === outputSymbol) ||
+      (pair.base === inputSymbol && pair.quote === outputSymbol)
+  );
+  return relevantPairs;
 };
 
 export const setTokenContract = async (

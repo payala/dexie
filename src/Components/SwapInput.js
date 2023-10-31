@@ -2,47 +2,36 @@ import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import SearchableDropdown from "./SearchableDropdown";
 import { toEth, fixNum } from "../utils_fe";
-import {
-  selectFirstToken,
-  selectMatchingSymbols,
-  setPair,
-  setTokenContract,
-} from "../store/interactions";
 import Spinner from "./Spinner";
 
-function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
+function SwapInput({
+  isInput,
+  placeholder,
+  onAmountChanged,
+  onTokenChanged,
+  amount,
+  symbol,
+  matchingSymbols,
+}) {
   const [balance, setBalance] = React.useState(0);
-  const [input, setInput] = React.useState(0);
   const [isBalanceUpdating, setIsBalanceUpdating] = React.useState(false);
-  const pairs = useSelector((state) => state.markets.pairs);
+
   const tokenContracts = useSelector((state) => state.tokens.contracts);
   const selectedPair = useSelector((state) => state.dexie.selectedPair);
   const address = useSelector((state) => state.provider.account);
-  const tokenData = useSelector((state) => state.tokens.tokenData);
 
   const prevSelectedSymbol = useSelector(
     (state) => state.markets.selectedSymbol
   );
   const dispatch = useDispatch();
 
-  const thisSymbol = React.useCallback(() => {
-    if (!selectedPair) {
-      return null;
-    }
-    return isInput ? selectedPair.base : selectedPair.quote;
-  }, [isInput, selectedPair]);
-
-  const handleValueChanged = (e) => {
-    setInput(e.target.value);
-
-    try {
-      onInputChanged(e.target.value);
-    } catch {}
+  const handleAmountChanged = (e) => {
+    onAmountChanged && onAmountChanged(e.target.value);
   };
 
   const loadBalance = React.useCallback(async () => {
     setIsBalanceUpdating(true);
-    const symbol = thisSymbol();
+
     const erc20Contract = tokenContracts[symbol];
     if (!erc20Contract) {
       console.warn("Token contract not loaded");
@@ -53,7 +42,7 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
     const balance = toEth(tokenBalance, decimals);
     setBalance(balance);
     setIsBalanceUpdating(false);
-  }, [address, thisSymbol, tokenContracts]);
+  }, [address, symbol, tokenContracts]);
 
   React.useEffect(() => {
     // Load balance if a pair is selected
@@ -62,49 +51,9 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
     }
   }, [loadBalance, address]);
 
-  const handleTokenSelect = async (selectedOption, field) => {
-    console.log(`Selected ${selectedOption.value} for ${field}`);
+  const handleTokenSelect = async (selectedOption) => {
     const val = selectedOption.value;
-    if (isInput) {
-      // Prepare the list of possible tokens for the output field
-      selectFirstToken(val, dispatch);
-      const relevantPairs = pairs.filter(
-        (pair) => pair.base === val || pair.quote === val
-      );
-      const matchingSymbols = relevantPairs.map((pair) =>
-        pair.quote === val ? pair.base : pair.quote
-      );
-      setTokenContract(val, pairs, tokenContracts, dispatch);
-      selectMatchingSymbols(matchingSymbols, dispatch);
-      setPair({ ...selectedPair, base: val }, tokenData, dispatch);
-    } else {
-      // Choose the pair that would allow swapping the selected tokens
-      const inputSymbol = prevSelectedSymbol;
-      const outputSymbol = val;
-      const matchingPairs = pairs.filter(
-        (pair) =>
-          (pair.quote === inputSymbol && pair.base === outputSymbol) ||
-          (pair.base === inputSymbol && pair.quote === outputSymbol)
-      );
-
-      console.log(`Matching pairs: ${matchingPairs}`);
-      // It doesn't really matter which pair we choose, we are only using it to
-      // access the token addresses later
-      let chosenPair = { ...matchingPairs[0] };
-
-      // Change the base and quote to reflect the chosen direction
-      // base = input
-      // quote = output
-      chosenPair.base = inputSymbol;
-      chosenPair.quote = outputSymbol;
-      if (chosenPair === undefined) {
-        console.warn(
-          `Pair between ${inputSymbol} and ${outputSymbol} not found`
-        );
-      } else {
-        await setPair(chosenPair, tokenData, dispatch);
-      }
-    }
+    onTokenChanged && onTokenChanged(val);
   };
 
   return (
@@ -112,28 +61,30 @@ function SwapInput({ isInput, placeholder, onInputChanged, valueOverride }) {
       <div className="flex">
         <input
           type="number"
-          placeholder={placeholder}
+          placeholder={!symbol ? "Select Token" : placeholder}
+          disabled={!symbol}
           className="block w-3/4 p-2 border rounded-l-lg bg-gray-700 placeholder-gray-500"
-          onChange={handleValueChanged}
-          value={valueOverride == null ? input : valueOverride}
+          onChange={handleAmountChanged}
+          value={amount}
         />
         <SearchableDropdown
           placeholder="Token"
           onTokenSelect={(selectedOption) =>
             handleTokenSelect(selectedOption, "input")
           }
-          onlyAvailablePairs={!isInput}
-          value={thisSymbol()}
+          onlyMatchingSymbols={matchingSymbols && matchingSymbols.length > 0}
+          value={symbol}
+          matchingSymbols={matchingSymbols}
         />
       </div>
       <div className="text-right text-gray-500 text-sm">
         Balance:{" "}
         {address ? (
-          thisSymbol() ? (
+          symbol ? (
             isBalanceUpdating ? (
               <Spinner />
             ) : (
-              `${fixNum(balance, 6)} ${thisSymbol()}`
+              `${fixNum(balance, 6)} ${symbol}`
             )
           ) : (
             `Choose Token`
