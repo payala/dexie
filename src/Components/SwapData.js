@@ -2,21 +2,12 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { fixNum, tokens } from "../utils_fe";
-import {
-  fullSelectedPair,
-  getBestRateFromRateInfo,
-  getRateInfo,
-} from "../dexLogic";
+import { getBestRateFromRateInfo, getRateInfo } from "../dexLogic";
 import { callAndShowErrors } from "../errors";
 import {
   storeBestRate,
-  selectFirstToken,
-  selectOutputMatchingSymbols,
-  selectInputMatchingSymbols,
-  setPair,
   setTokenContract,
   findMatchingSymbols,
-  findMatchingPairs,
 } from "../store/interactions";
 
 import SwapInput from "./SwapInput";
@@ -31,7 +22,6 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
   const [outputMatchingSymbols, setOutputMatchingSymbols] = React.useState([]);
 
   const tokenContracts = useSelector((state) => state.tokens.contracts);
-  const selectedPair = useSelector((state) => state.dexie.selectedPair);
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const dexie = useSelector((state) => state.dexie.contract);
   const pairs = useSelector((state) => state.markets.pairs);

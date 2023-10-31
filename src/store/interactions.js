@@ -10,13 +10,7 @@ import { fixNum, toEth, tokens } from "../utils_fe";
 import config from "../config.json";
 import { setPairs, setSymbols, setDexContracts } from "./reducers/markets";
 
-import {
-  setInputSymbol,
-  setOutputMatchingSymbols,
-  setInputMatchingSymbols,
-  setSelectedPair,
-  setBestRate,
-} from "./reducers/dexie";
+import { setBestRate } from "./reducers/dexie";
 
 import IUniswapV2FactoryABI from "@uniswap/v2-core/build/IUniswapV2Factory.json";
 import IUniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
@@ -182,18 +176,6 @@ export const loadMarkets = async (provider, dispatch) => {
   dispatch(setTokenData(oneInchTokens));
 };
 
-export const selectFirstToken = (symbol, dispatch) => {
-  dispatch(setInputSymbol(symbol));
-};
-
-export const selectOutputMatchingSymbols = (symbols, dispatch) => {
-  dispatch(setOutputMatchingSymbols(symbols));
-};
-
-export const selectInputMatchingSymbols = (symbols, dispatch) => {
-  dispatch(setInputMatchingSymbols(symbols));
-};
-
 export const findMatchingSymbols = (symbol, pairs) => {
   // Returns a list of symbols that have a pair with symbol
   const relevantPairs = pairs.filter(
@@ -204,16 +186,6 @@ export const findMatchingSymbols = (symbol, pairs) => {
   );
 
   return matchingSymbols;
-};
-
-export const findMatchingPairs = (inputSymbol, outputSymbol, pairs) => {
-  // Returns a list of pairs that include both symbols
-  const relevantPairs = pairs.filter(
-    (pair) =>
-      (pair.quote === inputSymbol && pair.base === outputSymbol) ||
-      (pair.base === inputSymbol && pair.quote === outputSymbol)
-  );
-  return relevantPairs;
 };
 
 export const setTokenContract = async (
@@ -321,41 +293,6 @@ export const executeBestRateSwap = async (
 
 //------------------------------------------------------------------------
 // Application data
-
-export const setPair = async (pair, tokenData, dispatch) => {
-  if (!pair.pairAddress) {
-    // If only base or quote tokens are selected, just store it
-    dispatch(setSelectedPair(pair));
-    return;
-  }
-
-  // If a pair has been chosen, get the pair and token contracts
-  const provider = getProvider();
-  const signer = await provider.getSigner();
-  // Get token contract data from 1Inch, because it's more reliable than Uniswap
-  // pair contracts. Use the pair only to get the tokens.
-  const baseTokenAddress = tokenData[pair.base].address;
-  const quoteTokenAddress = tokenData[pair.quote].address;
-
-  const baseTokenContract = new ethers.Contract(
-    baseTokenAddress,
-    IERC20.abi,
-    signer
-  );
-  const quoteTokenContract = new ethers.Contract(
-    quoteTokenAddress,
-    IERC20.abi,
-    signer
-  );
-
-  // assign by symbols base and quote with their corresponding contract
-  const tokenContracts = {
-    [pair.base]: baseTokenContract,
-    [pair.quote]: quoteTokenContract,
-  };
-  dispatch(setTokenContracts(tokenContracts));
-  dispatch(setSelectedPair(pair));
-};
 
 export const storeBestRate = (bestRate, dispatch) => {
   dispatch(setBestRate(bestRate));

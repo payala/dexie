@@ -17,12 +17,8 @@ function SwapInput({
   const [isBalanceUpdating, setIsBalanceUpdating] = React.useState(false);
 
   const tokenContracts = useSelector((state) => state.tokens.contracts);
-  const selectedPair = useSelector((state) => state.dexie.selectedPair);
   const address = useSelector((state) => state.provider.account);
 
-  const prevSelectedSymbol = useSelector(
-    (state) => state.markets.selectedSymbol
-  );
   const dispatch = useDispatch();
 
   const handleAmountChanged = (e) => {

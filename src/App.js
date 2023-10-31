@@ -125,6 +125,7 @@ function App() {
     try {
       const provider = await getProvider();
       const signer = await provider.getSigner();
+      // TODO: Remove selectedPair
       const inputContract = tokenContracts[selectedPair.base];
       const outputContract = tokenContracts[selectedPair.quote];
       const minOutputValue = bestRate.amountOut * (1 - slippage / 100);
@@ -178,6 +179,7 @@ function App() {
                 ? [
                     `Rate:`,
                     <br />,
+                    // TODO: Remove selectedPair
                     `1 ${selectedPair.base} = `,
                     isUpdating ? <Spinner /> : fixNum(bestRate.rate, 6),
                     ` ${selectedPair.quote}`,
