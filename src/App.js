@@ -196,7 +196,7 @@ function App() {
               {isSwapping ? <Spinner /> : "Swap"}
             </button>
           </div>
-          <SwapDetails />
+          {/* <SwapDetails /> */}
           <NetworkModal isOpen={!networkSupported} />
         </div>
       </div>
