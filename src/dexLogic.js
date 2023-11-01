@@ -14,7 +14,7 @@ const processError = (error, dispatch) => {
   throw new DexieError(msg);
 };
 
-const getRateInfo = async (
+export const getRateInfo = async (
   fixedInput,
   inputTokenContract,
   outputTokenContract,
@@ -92,8 +92,4 @@ export const getRateInfoFixedOutput = async (...args) => {
 export const getBestRateFromRateInfo = (rateInfo) => {
   const sortedRateInfo = rateInfo.sort((a, b) => b.rate - a.rate);
   return sortedRateInfo[0];
-};
-
-export const fullSelectedPair = (selectedPair) => {
-  return selectedPair && selectedPair.pairAddress;
 };

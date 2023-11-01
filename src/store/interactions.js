@@ -8,15 +8,9 @@ import {
 import { fixNum, toEth, tokens } from "../utils_fe";
 
 import config from "../config.json";
-import {
-  setPairs,
-  setSymbols,
-  setDexContracts,
-  setSelectedSymbol,
-  setMatchingSymbols,
-  setSelectedPair,
-  setBestRateAt,
-} from "./reducers/markets";
+import { setPairs, setSymbols, setDexContracts } from "./reducers/markets";
+
+import { setBestRate } from "./reducers/dexie";
 
 import IUniswapV2FactoryABI from "@uniswap/v2-core/build/IUniswapV2Factory.json";
 import IUniswapV2RouterABI from "@uniswap/v2-periphery/build/IUniswapV2Router02.json";
@@ -182,12 +176,16 @@ export const loadMarkets = async (provider, dispatch) => {
   dispatch(setTokenData(oneInchTokens));
 };
 
-export const selectFirstToken = (symbol, dispatch) => {
-  dispatch(setSelectedSymbol(symbol));
-};
+export const findMatchingSymbols = (symbol, pairs) => {
+  // Returns a list of symbols that have a pair with symbol
+  const relevantPairs = pairs.filter(
+    (pair) => pair.base === symbol || pair.quote === symbol
+  );
+  const matchingSymbols = relevantPairs.map((pair) =>
+    pair.quote === symbol ? pair.base : pair.quote
+  );
 
-export const selectMatchingSymbols = (symbols, dispatch) => {
-  dispatch(setMatchingSymbols(symbols));
+  return matchingSymbols;
 };
 
 export const setTokenContract = async (
@@ -219,47 +217,9 @@ export const setTokenContract = async (
   // Add the token contract to the token contracts dict
   tokenContracts = { ...tokenContracts, [symbol]: tokenContract };
   dispatch(setTokenContracts(tokenContracts));
+  return tokenContracts;
 };
 
-export const setPair = async (pair, tokenData, dispatch) => {
-  if (!pair.pairAddress) {
-    // If only base or quote tokens are selected, just store it
-    dispatch(setSelectedPair(pair));
-    return;
-  }
-
-  // If a pair has been chosen, get the pair and token contracts
-  const provider = getProvider();
-  const signer = await provider.getSigner();
-  // Get token contract data from 1Inch, because it's more reliable than Uniswap
-  // pair contracts. Use the pair only to get the tokens.
-  const baseTokenAddress = tokenData[pair.base].address;
-  const quoteTokenAddress = tokenData[pair.quote].address;
-
-  const baseTokenContract = new ethers.Contract(
-    baseTokenAddress,
-    IERC20.abi,
-    signer
-  );
-  const quoteTokenContract = new ethers.Contract(
-    quoteTokenAddress,
-    IERC20.abi,
-    signer
-  );
-
-  // assign by symbols base and quote with their corresponding contract
-  const tokenContracts = {
-    [pair.base]: baseTokenContract,
-    [pair.quote]: quoteTokenContract,
-  };
-  dispatch(setTokenContracts(tokenContracts));
-  dispatch(setSelectedPair(pair));
-};
-
-export const storeBestRateDex = (bestRate, dispatch) => {
-  console.log(`storeBestRate: ${bestRate.name}`);
-  dispatch(setBestRateAt(bestRate.name));
-};
 // --------------------------------------------------------------------------------------
 // LOAD CONTRACTS
 export const loadDexie = async (provider, chainId, dispatch) => {
@@ -275,21 +235,43 @@ export const loadDexie = async (provider, chainId, dispatch) => {
 //------------------------------------------------------------------------
 // Load Balances & Shares
 
-export const loadBalances = async (tokens, account, dispatch) => {
+export const loadBalances = async (
+  tokens,
+  tokenContracts,
+  pairs,
+  account,
+  dispatch
+) => {
+  const filteredTokens = tokens.filter((token) => Boolean(token));
+  let updatedTokenContracts = { ...tokenContracts };
+  if (filteredTokens.length === 0) return;
+  for (const token of filteredTokens) {
+    if (!Object.keys(tokenContracts).includes(token)) {
+      updatedTokenContracts = await setTokenContract(
+        token,
+        pairs,
+        tokenContracts,
+        dispatch
+      );
+    }
+  }
+  const contracts = filteredTokens.map((token) => updatedTokenContracts[token]);
   const balances = await Promise.all(
-    tokens.map(async (token) => await token.balanceOf(account))
+    contracts.map(async (contract) => await contract.balanceOf(account))
   );
+
+  const symbols = filteredTokens;
 
   const decimals = await Promise.all(
-    tokens.map(async (token) => await token.decimals())
+    contracts.map(async (contract) => await contract.decimals())
   );
 
-  dispatch(
-    setBalances([
-      toEth(balances[0], decimals[0]),
-      toEth(balances[1], decimals[1]),
-    ])
-  );
+  const balanceObj = {};
+  for (let i = 0; i < balances.length; i++) {
+    balanceObj[symbols[i]] = toEth(balances[i], decimals[i]);
+  }
+
+  dispatch(setBalances(balanceObj));
 };
 
 //------------------------------------------------------------------------
@@ -331,3 +313,18 @@ export const executeBestRateSwap = async (
   const result = await tx.wait();
   return result;
 };
+
+//------------------------------------------------------------------------
+// Application data
+
+export const storeBestRate = (bestRate, dispatch) => {
+  // Convert all bigints to string because Redux Devtools cannot serialize them
+  for (let key of Object.keys(bestRate)) {
+    if (typeof bestRate[key] === "bigint") {
+      bestRate[key] = bestRate[key].toString();
+    }
+  }
+  dispatch(setBestRate(bestRate));
+};
+
+export const storeInputSymbol = (inputSymbol, swapData, dispatch) => {};

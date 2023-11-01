@@ -36,24 +36,29 @@ const customStyles = {
 
 function SearchableDropdown({
   placeholder,
-  onlyAvailablePairs,
+  onlyMatchingSymbols,
   onTokenSelect,
   value,
+  matchingSymbols,
 }) {
   const symbols = useSelector((state) => state.markets.symbols);
-  const matchingSymbols = useSelector((state) => state.markets.matchingSymbols);
   const [filteredOptions, setFilteredOptions] = React.useState([]);
   const [inputValue, setInputValue] = React.useState("");
 
   React.useEffect(() => {
-    if (inputValue.length >= 1 || onlyAvailablePairs) {
+    if (inputValue.length >= 1 || onlyMatchingSymbols) {
+      // If the user is typing, or we should only show matchingSymbols,
+      // show tokens that match with the user's input
+
       // Choose from all the tokens in the tokens list by default
       let symbolsBase = symbols;
-      if (onlyAvailablePairs) {
-        // Choose only tokens that exist in a pair with the previously selected token
+
+      if (onlyMatchingSymbols) {
+        // Choose only tokens from the given matchingSymbols list
         symbolsBase = matchingSymbols;
       }
 
+      // Reduce the list to tokens that include what has been typed by user
       const filtered = symbolsBase
         .filter((token) =>
           token.toLowerCase().includes(inputValue.toLowerCase())
@@ -81,7 +86,7 @@ function SearchableDropdown({
         ].map((v) => ({ value: v, label: v }))
       );
     }
-  }, [inputValue, symbols, matchingSymbols, onlyAvailablePairs]);
+  }, [inputValue, symbols, matchingSymbols, onlyMatchingSymbols]);
 
   return (
     <Select
