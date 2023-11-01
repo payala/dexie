@@ -115,40 +115,59 @@ function SwapData({ isUpdating, setIsUpdating }) {
 
   const handleInputChanged = async (value) => {
     setInputValue(value);
-    updateSwapData({ inputAmount: value });
+    let swapDataChanges = { inputAmount: value };
     const outAmount = await callAndShowErrors(
       async () => await setOutputForInput(value),
       dispatch
     );
     if (outAmount) {
-      updateSwapData({ outputAmount: outAmount, inputAmount: value });
+      swapDataChanges = {
+        ...swapDataChanges,
+        outputAmount: outAmount,
+        inputAmount: value,
+      };
     }
+    updateSwapData(swapDataChanges);
   };
 
   const handleOutputChanged = async (value) => {
     setOutputValue(value);
-    updateSwapData({ outputAmount: value });
+    let swapDataChanges = { outputAmount: value };
     const inAmount = await callAndShowErrors(
       async () => await setInputForOutput(value),
       dispatch
     );
     if (inAmount) {
-      updateSwapData({ inputAmount: inAmount, outputAmount: value });
+      swapDataChanges = {
+        ...swapDataChanges,
+        inputAmount: inAmount,
+        outputAmount: value,
+      };
     }
+    updateSwapData(swapDataChanges);
   };
+  React.useEffect(() => {
+    handleInputChanged(inputAmount);
+  }, [outputToken]);
+
+  React.useEffect(() => {
+    handleOutputChanged(outputAmount);
+  }, [inputToken]);
 
   const handleInputTokenChanged = async (val) => {
     // Prepare the list of possible tokens for the output field
     setInputToken(val);
-    updateSwapData({ inputToken: val });
+    let swapDataChanges = { inputToken: val };
     setOutputMatchingSymbols(findMatchingSymbols(val, pairs));
+    updateSwapData(swapDataChanges);
   };
 
   const handleOutputTokenChanged = async (val) => {
     // Choose the pair that would allow swapping the selected tokens
     setOutputToken(val);
-    updateSwapData({ outputToken: val });
+    let swapDataChanges = { outputToken: val };
     setInputMatchingSymbols(findMatchingSymbols(val, pairs));
+    updateSwapData(swapDataChanges);
   };
 
   const swapTokens = () => {

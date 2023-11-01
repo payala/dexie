@@ -30,7 +30,7 @@ function SwapInput({
 
   const handleTokenSelect = async (selectedOption) => {
     const val = selectedOption.value;
-    setTokenContract(val, pairs, tokenContracts, dispatch);
+    await setTokenContract(val, pairs, tokenContracts, dispatch);
     setIsBalanceUpdating(true);
     loadBalances(
       [...Object.keys(balances), val],
