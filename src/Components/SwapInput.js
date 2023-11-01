@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from "react-redux";
 import SearchableDropdown from "./SearchableDropdown";
 import { toEth, fixNum } from "../utils_fe";
 import Spinner from "./Spinner";
+import { loadBalances, setTokenContract } from "../store/interactions";
+import { setBalances } from "../store/reducers/tokens";
 
 function SwapInput({
   isInput,
@@ -13,11 +15,12 @@ function SwapInput({
   symbol,
   matchingSymbols,
 }) {
-  const [balance, setBalance] = React.useState(0);
   const [isBalanceUpdating, setIsBalanceUpdating] = React.useState(false);
 
   const tokenContracts = useSelector((state) => state.tokens.contracts);
   const address = useSelector((state) => state.provider.account);
+  const pairs = useSelector((state) => state.markets.pairs);
+  const balances = useSelector((state) => state.tokens.balances);
 
   const dispatch = useDispatch();
 
@@ -25,30 +28,18 @@ function SwapInput({
     onAmountChanged && onAmountChanged(e.target.value);
   };
 
-  const loadBalance = React.useCallback(async () => {
-    setIsBalanceUpdating(true);
-
-    const erc20Contract = tokenContracts[symbol];
-    if (!erc20Contract) {
-      console.warn("Token contract not loaded");
-      return;
-    }
-    const tokenBalance = await erc20Contract.balanceOf(address);
-    const decimals = await erc20Contract.decimals();
-    const balance = toEth(tokenBalance, decimals);
-    setBalance(balance);
-    setIsBalanceUpdating(false);
-  }, [address, symbol, tokenContracts]);
-
-  React.useEffect(() => {
-    // Load balance if a pair is selected
-    if (address !== null) {
-      loadBalance();
-    }
-  }, [loadBalance, address]);
-
   const handleTokenSelect = async (selectedOption) => {
     const val = selectedOption.value;
+    setTokenContract(val, pairs, tokenContracts, dispatch);
+    setIsBalanceUpdating(true);
+    loadBalances(
+      [...Object.keys(balances), val],
+      tokenContracts,
+      pairs,
+      address,
+      dispatch
+    );
+    setIsBalanceUpdating(false);
     onTokenChanged && onTokenChanged(val);
   };
 
@@ -80,7 +71,7 @@ function SwapInput({
             isBalanceUpdating ? (
               <Spinner />
             ) : (
-              `${fixNum(balance, 6)} ${symbol}`
+              `${fixNum(balances[symbol], 6)} ${symbol}`
             )
           ) : (
             `Choose Token`

@@ -217,6 +217,7 @@ export const setTokenContract = async (
   // Add the token contract to the token contracts dict
   tokenContracts = { ...tokenContracts, [symbol]: tokenContract };
   dispatch(setTokenContracts(tokenContracts));
+  return tokenContracts;
 };
 
 // --------------------------------------------------------------------------------------
@@ -234,21 +235,43 @@ export const loadDexie = async (provider, chainId, dispatch) => {
 //------------------------------------------------------------------------
 // Load Balances & Shares
 
-export const loadBalances = async (tokens, account, dispatch) => {
+export const loadBalances = async (
+  tokens,
+  tokenContracts,
+  pairs,
+  account,
+  dispatch
+) => {
+  const filteredTokens = tokens.filter((token) => Boolean(token));
+  let updatedTokenContracts = { ...tokenContracts };
+  if (filteredTokens.length === 0) return;
+  for (const token of filteredTokens) {
+    if (!Object.keys(tokenContracts).includes(token)) {
+      updatedTokenContracts = await setTokenContract(
+        token,
+        pairs,
+        tokenContracts,
+        dispatch
+      );
+    }
+  }
+  const contracts = filteredTokens.map((token) => updatedTokenContracts[token]);
   const balances = await Promise.all(
-    tokens.map(async (token) => await token.balanceOf(account))
+    contracts.map(async (contract) => await contract.balanceOf(account))
   );
+
+  const symbols = filteredTokens;
 
   const decimals = await Promise.all(
-    tokens.map(async (token) => await token.decimals())
+    contracts.map(async (contract) => await contract.decimals())
   );
 
-  dispatch(
-    setBalances([
-      toEth(balances[0], decimals[0]),
-      toEth(balances[1], decimals[1]),
-    ])
-  );
+  const balanceObj = {};
+  for (let i = 0; i < balances.length; i++) {
+    balanceObj[symbols[i]] = toEth(balances[i], decimals[i]);
+  }
+
+  dispatch(setBalances(balanceObj));
 };
 
 //------------------------------------------------------------------------
@@ -295,6 +318,12 @@ export const executeBestRateSwap = async (
 // Application data
 
 export const storeBestRate = (bestRate, dispatch) => {
+  // Convert all bigints to string because Redux Devtools cannot serialize them
+  for (let key of Object.keys(bestRate)) {
+    if (typeof bestRate[key] === "bigint") {
+      bestRate[key] = bestRate[key].toString();
+    }
+  }
   dispatch(setBestRate(bestRate));
 };
 

@@ -28,7 +28,6 @@ import SwapData from "./Components/SwapData";
 const supportedChains = Object.keys(config).map((dec) => Number(dec));
 
 function App() {
-  const [inputValue, setInputValue] = React.useState(null); // TODO: REMOVE
   const [banner, setBanner] = React.useState({
     visible: false,
     message: "",
@@ -42,11 +41,12 @@ function App() {
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const account = useSelector((state) => state.provider.account);
   const tokenContracts = useSelector((state) => state.tokens.contracts);
-  const selectedPair = useSelector((state) => state.dexie.selectedPair);
   const dexie = useSelector((state) => state.dexie.contract);
   const bestRate = useSelector((state) => state.dexie.bestRate);
   const slippage = useSelector((state) => state.dexie.slippage);
   const error = useSelector((state) => state.errors.message);
+  const swapData = useSelector((state) => state.dexie.swapData);
+  const pairs = useSelector((state) => state.markets.pairs);
 
   const dispatch = useDispatch();
 
@@ -122,12 +122,15 @@ function App() {
   const handleSwap = async () => {
     setIsSwapping(true);
     showInProgress("Swap in progress");
+    if (!swapData.complete) {
+      console.warn("Swap data not complete");
+      return;
+    }
     try {
       const provider = await getProvider();
       const signer = await provider.getSigner();
-      // TODO: Remove selectedPair
-      const inputContract = tokenContracts[selectedPair.base];
-      const outputContract = tokenContracts[selectedPair.quote];
+      const inputContract = tokenContracts[swapData.inputToken];
+      const outputContract = tokenContracts[swapData.outputToken];
       const minOutputValue = bestRate.amountOut * (1 - slippage / 100);
       await executeBestRateSwap(
         dexie,
@@ -135,12 +138,12 @@ function App() {
         dexContracts,
         inputContract,
         outputContract,
-        inputValue,
+        swapData.inputAmount,
         minOutputValue,
         signer
       );
-      const tokens = Object.values(tokenContracts);
-      loadBalances(tokens, account, dispatch);
+      const tokens = [swapData.inputToken, swapData.outputToken];
+      loadBalances(tokens, tokenContracts, pairs, account, dispatch);
       showSuccess("Swap completed successfully", true);
     } catch (error) {
       showError("Swap Failed", true);
@@ -168,21 +171,16 @@ function App() {
         >
           <div className="bg-gray-800 p-6 rounded-lg w-80">
             <Title />
-            <SwapData
-              isUpdating={isUpdating}
-              setIsUpdating={setIsUpdating}
-              setInputValueUpstream={setInputValue}
-            />
+            <SwapData isUpdating={isUpdating} setIsUpdating={setIsUpdating} />
             <SlippageInfo />
             <RateInfo>
               {bestRate
                 ? [
                     `Rate:`,
                     <br />,
-                    // TODO: Remove selectedPair
-                    `1 ${selectedPair.base} = `,
+                    `1 ${swapData.inputToken} = `,
                     isUpdating ? <Spinner /> : fixNum(bestRate.rate, 6),
-                    ` ${selectedPair.quote}`,
+                    ` ${swapData.outputToken}`,
                     <br />,
                     `(Best rate at ${bestRate.name})`,
                   ]

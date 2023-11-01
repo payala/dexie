@@ -9,10 +9,11 @@ export class DexieError extends Error {
 
 export const callAndShowErrors = async (fn, dispatch) => {
   try {
-    await fn();
+    return await fn();
   } catch (error) {
     if (error.name === "DexieError") {
       dispatch(setError(error.message));
     }
   }
+  return null;
 };

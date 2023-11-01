@@ -12,10 +12,11 @@ import {
 
 import SwapInput from "./SwapInput";
 import SwapArrow from "./SwapArrow";
+import { setSwapData } from "../store/reducers/dexie";
 
-function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
-  const [inputValue, setInputValueState] = React.useState("");
-  const [outputValue, setOutputValue] = React.useState("");
+function SwapData({ isUpdating, setIsUpdating }) {
+  const [inputAmount, setInputValueState] = React.useState("");
+  const [outputAmount, setOutputValue] = React.useState("");
   const [inputToken, setInputToken] = React.useState("");
   const [outputToken, setOutputToken] = React.useState("");
   const [inputMatchingSymbols, setInputMatchingSymbols] = React.useState([]);
@@ -25,14 +26,13 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
   const dexContracts = useSelector((state) => state.markets.dexContracts);
   const dexie = useSelector((state) => state.dexie.contract);
   const pairs = useSelector((state) => state.markets.pairs);
-  const tokenData = useSelector((state) => state.tokens.tokenData);
+  const swapData = useSelector((state) => state.dexie.swapData);
 
   const dispatch = useDispatch();
 
   // TODO: REMOVE UPSTREAM
   const setInputValue = (value) => {
     setInputValueState(value);
-    setInputValueUpstream(value);
   };
 
   const calculateRate = React.useCallback(
@@ -75,50 +75,87 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
     const bestRate = getBestRateFromRateInfo(rateInfo);
     storeBestRate(bestRate, dispatch);
     if (!invalidInput) {
-      isInput
-        ? setOutputValue(fixNum(bestRate.amountOut, 8))
-        : setInputValue(fixNum(bestRate.amountIn, 8));
+      if (isInput) {
+        const outAmount = fixNum(bestRate.amountOut, 8);
+        setOutputValue(outAmount);
+        setIsUpdating(false);
+        return outAmount;
+      } else {
+        const inAmount = fixNum(bestRate.amountIn, 8);
+        setInputValue(inAmount);
+        setIsUpdating(false);
+        return inAmount;
+      }
     }
     setIsUpdating(false);
   };
 
   const setOutputForInput = async (inputValue) => {
-    onAmountChanged(inputValue, true);
+    return onAmountChanged(inputValue, true);
   };
 
   const setInputForOutput = async (outputValue) => {
-    onAmountChanged(outputValue, false);
+    return onAmountChanged(outputValue, false);
+  };
+
+  const updateSwapData = (newData) => {
+    const newSwapData = {
+      ...swapData,
+      ...newData,
+    };
+    const complete = Boolean(
+      newSwapData.inputToken &&
+        newSwapData.outputToken &&
+        newSwapData.inputAmount &&
+        newSwapData.outputAmount
+    );
+    newSwapData.complete = complete;
+    dispatch(setSwapData(newSwapData));
   };
 
   const handleInputChanged = async (value) => {
     setInputValue(value);
-    callAndShowErrors(async () => await setOutputForInput(value), dispatch);
+    updateSwapData({ inputAmount: value });
+    const outAmount = await callAndShowErrors(
+      async () => await setOutputForInput(value),
+      dispatch
+    );
+    if (outAmount) {
+      updateSwapData({ outputAmount: outAmount, inputAmount: value });
+    }
   };
 
   const handleOutputChanged = async (value) => {
     setOutputValue(value);
-    callAndShowErrors(async () => await setInputForOutput(value), dispatch);
+    updateSwapData({ outputAmount: value });
+    const inAmount = await callAndShowErrors(
+      async () => await setInputForOutput(value),
+      dispatch
+    );
+    if (inAmount) {
+      updateSwapData({ inputAmount: inAmount, outputAmount: value });
+    }
   };
 
   const handleInputTokenChanged = async (val) => {
     // Prepare the list of possible tokens for the output field
     setInputToken(val);
+    updateSwapData({ inputToken: val });
     setOutputMatchingSymbols(findMatchingSymbols(val, pairs));
-    setTokenContract(val, pairs, tokenContracts, dispatch);
   };
 
   const handleOutputTokenChanged = async (val) => {
     // Choose the pair that would allow swapping the selected tokens
     setOutputToken(val);
+    updateSwapData({ outputToken: val });
     setInputMatchingSymbols(findMatchingSymbols(val, pairs));
-    setTokenContract(val, pairs, tokenContracts, dispatch);
   };
 
   const swapTokens = () => {
     setInputToken(outputToken);
     setOutputToken(inputToken);
-    setInputValue(outputValue);
-    setOutputValue(inputValue);
+    setInputValue(outputAmount);
+    setOutputValue(inputAmount);
   };
 
   return (
@@ -126,7 +163,7 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
       <SwapInput
         isInput={true}
         placeholder="Input Amount"
-        amount={inputValue}
+        amount={inputAmount}
         symbol={inputToken}
         onAmountChanged={handleInputChanged}
         onTokenChanged={handleInputTokenChanged}
@@ -136,7 +173,7 @@ function SwapData({ isUpdating, setIsUpdating, setInputValueUpstream }) {
       <SwapInput
         isInput={false}
         placeholder="Output Amount"
-        amount={outputValue}
+        amount={outputAmount}
         symbol={outputToken}
         onAmountChanged={handleOutputChanged}
         onTokenChanged={handleOutputTokenChanged}
