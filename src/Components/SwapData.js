@@ -113,38 +113,24 @@ function SwapData({ isUpdating, setIsUpdating }) {
     dispatch(setSwapData(newSwapData));
   };
 
+  React.useEffect(() => {
+    updateSwapData({ inputAmount, outputAmount, inputToken, outputToken });
+  }, [inputAmount, outputAmount, inputToken, outputToken]);
+
   const handleInputChanged = async (value) => {
     setInputValue(value);
-    let swapDataChanges = { inputAmount: value };
-    const outAmount = await callAndShowErrors(
+    await callAndShowErrors(
       async () => await setOutputForInput(value),
       dispatch
     );
-    if (outAmount) {
-      swapDataChanges = {
-        ...swapDataChanges,
-        outputAmount: outAmount,
-        inputAmount: value,
-      };
-    }
-    updateSwapData(swapDataChanges);
   };
 
   const handleOutputChanged = async (value) => {
     setOutputValue(value);
-    let swapDataChanges = { outputAmount: value };
-    const inAmount = await callAndShowErrors(
+    await callAndShowErrors(
       async () => await setInputForOutput(value),
       dispatch
     );
-    if (inAmount) {
-      swapDataChanges = {
-        ...swapDataChanges,
-        inputAmount: inAmount,
-        outputAmount: value,
-      };
-    }
-    updateSwapData(swapDataChanges);
   };
   React.useEffect(() => {
     handleInputChanged(inputAmount);
@@ -157,17 +143,13 @@ function SwapData({ isUpdating, setIsUpdating }) {
   const handleInputTokenChanged = async (val) => {
     // Prepare the list of possible tokens for the output field
     setInputToken(val);
-    let swapDataChanges = { inputToken: val };
     setOutputMatchingSymbols(findMatchingSymbols(val, pairs));
-    updateSwapData(swapDataChanges);
   };
 
   const handleOutputTokenChanged = async (val) => {
     // Choose the pair that would allow swapping the selected tokens
     setOutputToken(val);
-    let swapDataChanges = { outputToken: val };
     setInputMatchingSymbols(findMatchingSymbols(val, pairs));
-    updateSwapData(swapDataChanges);
   };
 
   const swapTokens = () => {
