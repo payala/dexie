@@ -124,6 +124,8 @@ function App() {
     showInProgress("Swap in progress");
     if (!swapData.complete) {
       console.warn("Swap data not complete");
+      showError("Swap Data not complete");
+      setIsSwapping(false);
       return;
     }
     try {
@@ -188,8 +190,8 @@ function App() {
             </RateInfo>
             <button
               onClick={handleSwap}
-              className="w-full bg-blue-500 hover:bg-blue-600 rounded-lg p-2 text-white"
-              disabled={isSwapping}
+              className="w-full bg-blue-500 disabled:bg-gray-500 hover:bg-blue-600 rounded-lg p-2 text-white"
+              disabled={isSwapping || !swapData.complete}
             >
               {isSwapping ? <Spinner /> : "Swap"}
             </button>
