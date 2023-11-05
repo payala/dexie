@@ -54,39 +54,24 @@ export const loadNetwork = async (provider, dispatch) => {
 
 export const loadDexes = async (provider, chainId, dispatch) => {
   const signer = await provider.getSigner();
-  const uniswapFactory = new ethers.Contract(
-    config[chainId].DEXES.uniswap.FACTORY_ADDRESS,
-    IUniswapV2FactoryABI.abi,
-    signer
-  );
-  const uniswapRouter = new ethers.Contract(
-    config[chainId].DEXES.uniswap.V2_ROUTER_02_ADDRESS,
-    IUniswapV2RouterABI.abi,
-    signer
-  );
-  const sushiswapFactory = new ethers.Contract(
-    config[chainId].DEXES.sushiswap.FACTORY_ADDRESS,
-    IUniswapV2FactoryABI.abi,
-    signer
-  );
-  const sushiswapRouter = new ethers.Contract(
-    config[chainId].DEXES.sushiswap.V2_ROUTER_02_ADDRESS,
-    IUniswapV2RouterABI.abi,
-    signer
-  );
-
-  const dexContracts = [
-    {
-      name: "Uniswap",
-      router: uniswapRouter,
-      factory: uniswapFactory,
-    },
-    {
-      name: "Sushiswap",
-      router: sushiswapRouter,
-      factory: sushiswapFactory,
-    },
-  ];
+  const dexContracts = [];
+  for (const dex of Object.values(config[chainId].DEXES)) {
+    const factoryContract = new ethers.Contract(
+      dex.FACTORY_ADDRESS,
+      IUniswapV2FactoryABI.abi,
+      signer
+    );
+    const routerContract = new ethers.Contract(
+      dex.V2_ROUTER_02_ADDRESS,
+      IUniswapV2RouterABI.abi,
+      signer
+    );
+    dexContracts.push({
+      name: dex.name,
+      router: routerContract,
+      factory: factoryContract,
+    });
+  }
 
   dispatch(setDexContracts(dexContracts));
 };
