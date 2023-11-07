@@ -176,17 +176,19 @@ function App() {
             <SwapData isUpdating={isUpdating} setIsUpdating={setIsUpdating} />
             <SlippageInfo />
             <RateInfo>
-              {bestRate
-                ? [
-                    `Rate:`,
-                    <br />,
-                    `1 ${swapData.inputToken} = `,
-                    isUpdating ? <Spinner /> : fixNum(bestRate.rate, 6),
-                    ` ${swapData.outputToken}`,
-                    <br />,
-                    `(Best rate at ${bestRate.name})`,
-                  ]
-                : `Select two tokens to see the rate`}
+              {bestRate ? (
+                <>
+                  Rate:
+                  <br />
+                  {`1 ${swapData.inputToken} = `}
+                  {isUpdating ? <Spinner /> : fixNum(bestRate.rate, 6)}
+                  {` ${swapData.outputToken}`}
+                  <br />
+                  {`(Best rate at ${bestRate.name})`}
+                </>
+              ) : (
+                `Select two tokens to see the rate`
+              )}
             </RateInfo>
             <button
               onClick={handleSwap}
