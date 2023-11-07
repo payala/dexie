@@ -204,6 +204,9 @@ function App() {
           {/* <SwapDetails /> */}
           <NetworkModal isOpen={!networkSupported} />
         </div>
+        <div id="version" className="text-white self-end">
+          v{process.env.REACT_APP_VERSION}
+        </div>
       </div>
     </>
   );
