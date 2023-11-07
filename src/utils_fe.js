@@ -16,7 +16,7 @@ const fixNum = (number, numDecimals) => {
   numDecimals = Number(numDecimals);
   number = Number(number);
   const mulFac = 10 ** numDecimals;
-  return (Math.round(parseFloat(number) * mulFac) / mulFac).toFixed(
+  return (Math.floor(parseFloat(number) * mulFac) / mulFac).toFixed(
     numDecimals
   );
 };
