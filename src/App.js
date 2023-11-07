@@ -25,7 +25,10 @@ import NetworkModal from "./Components/NetworkModal";
 import config from "./config.json";
 import SwapData from "./Components/SwapData";
 
-const supportedChains = Object.keys(config).map((dec) => Number(dec));
+const chainsToRemove = [5];
+const supportedChains = Object.keys(config)
+  .map((dec) => Number(dec))
+  .filter((id) => !chainsToRemove.includes(id));
 
 function App() {
   const [banner, setBanner] = React.useState({
