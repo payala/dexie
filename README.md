@@ -1,70 +1,65 @@
-# Getting Started with Create React App
+# Dexie, simple DEX aggregator
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a simple DEX aggregator that finds the best rate for a swap between different DEXes and routes your swap to the one that gives the best rate for the amount to be swapped.
 
-## Available Scripts
+Currently, it reflects what I considered to be an MVP, with simple but complete functionality.
 
-In the project directory, you can run:
+It is backed by a generic, interface oriented smart contract that allows to route a swap and to get the rates for any DEX that implements the UniswapV2 interface. Additional DEXes can be incorporated by just changing the frontend.
 
-### `npm start`
+# Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Support extensive list of tokens
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+I considered adding a manual set of ERC20 Tokens, but this didn't seem "complete" enough for me. Currently, the list of tokens are fetched from https://tokenlists.org/ using the list of Uniswap Pairs, and curated against the list of 1Inch Tokens for better data quality.
 
-### `npm test`
+### Smooth UI
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+There are some challenges in supporting such a wide list of tokens from a UI perspective. Currently, the list of tokens in the respective dropdowns are populated dynamically to ensure that there exists at least one pair in Uniswap for them. So once one token is selected, the other dropdown is conditioned to tokens that would form a valid pair at least on one DEX.
 
-### `npm run build`
+With such a big list of tokens, it is important to be able to find your token. To make this easier, while you have the dropdown open, it is possible to type, and the list of available tokens will be filtered to the ones that match your input.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Future enhancements
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Support native ETH swapping
+- Detail panel with the rates of all DEXes and how they compare
+- Additional DEXes
+- Additional DEX interfaces
+- Deploy on Arbitrum, Polygon, and ZkSync
+- Splitting of large swaps among several DEXes to minimize slippage, while minimizing gas usage
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Languages and Tools used
 
-### `npm run eject`
+- Solidity
+- React.js
+- Hardhat
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Installation instructions
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- clone repo
+- install dependencies `npm install`
+- Optional: run tests `npx hardhat test`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Local development
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Start hardhat node `npx hardhat node --network localhost`
+- Deploy contract to node `npx hardhat run scripts/deploy.js --network localhost`
+- Start react server `npm run start`
 
-## Learn More
+# Compiling smart contract
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- `npx hardhat compile`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Deploying to ETH Mainnet
 
-### Code Splitting
+- fill `.env` file with at least these fields, use .env.example as a template
+  - ALCHEMY_API_KEY
+  - PRIVATE_KEY: pay attention to the format already existing in .env.example
+- `npx hardhat run scripts/deploy.js
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+# Acknowledgements
 
-### Analyzing the Bundle Size
+Especial thanks to [Gregory McCubbin](https://www.dappuniversity.com/) and [Anthony Romagnolo](https://anthonyromagnolo.wordpress.com/) for their mentorship and sharing their knowledge with me. And to all the folks from the DappUniversity mentorship program with who I had the pleasure to work with.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+# Contact
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+You can find my contact details at [my personal site](https://bdev.payala.me)
