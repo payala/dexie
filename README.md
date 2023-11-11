@@ -6,6 +6,8 @@ Currently, it reflects what I considered to be an MVP, with simple but complete 
 
 It is backed by a generic, interface oriented smart contract that allows to route a swap and to get the rates for any DEX that implements the UniswapV2 interface. Additional DEXes can be incorporated by just changing the frontend.
 
+You can find it live [here](https://dexie.payala.me)
+
 # Features
 
 ### Support extensive list of tokens
@@ -17,6 +19,15 @@ I considered adding a manual set of ERC20 Tokens, but this didn't seem "complete
 There are some challenges in supporting such a wide list of tokens from a UI perspective. Currently, the list of tokens in the respective dropdowns are populated dynamically to ensure that there exists at least one pair in Uniswap for them. So once one token is selected, the other dropdown is conditioned to tokens that would form a valid pair at least on one DEX.
 
 With such a big list of tokens, it is important to be able to find your token. To make this easier, while you have the dropdown open, it is possible to type, and the list of available tokens will be filtered to the ones that match your input.
+
+### Deployed to Mainnet
+
+As part of making this complete and fully functional, I considered it is necessary to deploy this to Mainnet, so swaps on real tokens can be done. So the smart contract is deployed to:
+
+- ETH Mainnet: `0x8dfB32087B9CDE0dF71d0D6Bbc11F34AEB1da177`
+- Goerli Testnet: `0x8a4D021cd661D233bf1Ce3b9583116bfd1d490d3`
+
+And a functional frontend supporting Mainnet and Hardhat local node can be found at https://dexie.payala.me.
 
 # Future enhancements
 
